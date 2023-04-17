@@ -1,15 +1,17 @@
-# Expo Router Example
+# Updated New Usermanagement version (android + ios)
 
-Use [`expo-router`](https://expo.github.io/router) to build native navigation using files in the `app/` directory.
+bulding for android only currently
 
-## 🚀 How to use
+## Key points
 
-```sh
-npx create-react-native-app -t with-router
-```
+- feature rich application
+- faster load
+- better userexperience
 
-## 📝 Notes
+# Technology Stack
 
-- [Expo Router: Docs](https://expo.github.io/router)
-- [Expo Router: Repo](https://github.com/expo/router)
-- [Request for Comments](https://github.com/expo/router/discussions/1)
+- React-Native/Expo
+- React-Native-Elements
+- Firebase v9
+- Native wind (tailwind css like style)
+- Eas Cli
