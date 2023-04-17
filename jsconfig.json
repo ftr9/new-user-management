@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["aComponents/*"],
+      "@constants/*": ["constants/*"],
+      "@utils/*": ["utils/*"]
+    }
+  }
+}
