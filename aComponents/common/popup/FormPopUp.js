@@ -1,10 +1,11 @@
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { BottomSheet, Avatar } from '@rneui/themed';
 import { H6 } from '../typography/heading';
 import InputField from '../Input';
 import NormalButton from '../buttons/cta/NormalButton';
 import DottedIconButton from '../buttons/cta/DottedIconButton';
 import { useState, useContext, createContext } from 'react';
+import { primaryColor } from '@constants/color';
 
 /**This starts here finaly.......✨🧨🎉✨✨🧨🎉🎉 */
 
@@ -83,6 +84,30 @@ FormsPopup.CtaButton = ({ children, iconName, bgColor, borderColor }) => {
         iconType={{ type: 'ionicon', name: iconName ? iconName : 'add' }}
       />
     </View>
+  );
+};
+
+FormsPopup.CircularCtaButton = () => {
+  const { setPopupVisible } = useContext(FormsPopupContext);
+  return (
+    <TouchableOpacity
+      onPress={() => {
+        setPopupVisible(true);
+      }}
+    >
+      <Avatar
+        size={25}
+        rounded
+        containerStyle={{
+          backgroundColor: primaryColor,
+          marginLeft: 15,
+        }}
+        icon={{
+          name: 'pencil',
+          type: 'font-awesome',
+        }}
+      ></Avatar>
+    </TouchableOpacity>
   );
 };
 

@@ -1,34 +1,27 @@
-import { View, Text, TouchableOpacity } from 'react-native';
-import React from 'react';
+import { View } from 'react-native';
 import { H5 } from '../typography/heading';
-import { Avatar } from '@rneui/themed';
-import { primaryColor } from '@constants/color';
 import IconStaticButton from '../buttons/static/IconStaticBtn';
 import NormalStaticButton from '../buttons/static/NormalStaticBtn';
+import FormsPopup from '../popup/FormPopUp';
 
 const CardInfoHeader = () => {
   return (
     <View className="w-[100%]  bg-secondary flex-row flex-wrap justify-between items-center">
       <View className="flex-row">
         <H5>Hello</H5>
-        <TouchableOpacity
-          onPress={() => {
-            alert('hello world');
-          }}
-        >
-          <Avatar
-            size={25}
-            rounded
-            containerStyle={{
-              backgroundColor: primaryColor,
-              marginLeft: 15,
-            }}
-            icon={{
-              name: 'pencil',
-              type: 'font-awesome',
-            }}
-          ></Avatar>
-        </TouchableOpacity>
+        <FormsPopup>
+          <FormsPopup.CircularCtaButton />
+          <FormsPopup.BottomsSheet>
+            <FormsPopup.Header title={'Edit name'} />
+            <FormsPopup.FormsSubmitButton
+              submitClickHandle={context => {
+                console.log(context);
+              }}
+            >
+              Edit
+            </FormsPopup.FormsSubmitButton>
+          </FormsPopup.BottomsSheet>
+        </FormsPopup>
       </View>
 
       <View className="flex-row">

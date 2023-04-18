@@ -23,6 +23,14 @@ module.exports = function (api) {
               rootPathSuffix: './utils',
               rootPathPrefix: '@utils',
             },
+            {
+              rootPathSuffix: './config',
+              rootPathPrefix: '@config',
+            },
+            {
+              rootPathSuffix: './store',
+              rootPathPrefix: '@store',
+            },
           ],
         },
       ],

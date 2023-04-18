@@ -1,10 +1,13 @@
 import { View, Text } from 'react-native';
 import NormalButton from '../buttons/cta/NormalButton';
 import { H4 } from '../typography/heading';
+import useUserData from '@store/useUserData';
 
 const DashBoardHeader = () => {
+  ////get user data from global store..
+  const { user } = useUserData();
   const logoutBtnClickHandle = async () => {
-    alert('hello world');
+    console.log(user);
   };
   return (
     <View className="flex-row justify-between items-center px-2 py-3 flex-wrap">
