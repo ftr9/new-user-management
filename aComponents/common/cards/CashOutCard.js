@@ -3,7 +3,8 @@ import { Icon } from '@rneui/themed';
 import moment from 'moment/moment';
 import { tertiaryColor } from '@constants/color';
 
-const CashOutCard = ({ isAdmin }) => {
+const CashOutCard = props => {
+  const isAdmin = props.isAdmin;
   const BtnClickHandle = () => {
     alert('cool');
   };
@@ -26,7 +27,7 @@ const CashOutCard = ({ isAdmin }) => {
         </View>
         <View className="ml-3 w-[70%]">
           <Text className=" font-Lato-Regular text-[16px] font-semibold mb-[3px]">
-            Mark
+            {props?.userName}
           </Text>
           <Text className=" font-Lato-Regular text-[10px]">
             {moment(Date.now()).format('LL')} .{' '}

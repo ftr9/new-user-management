@@ -21,6 +21,17 @@ export const FormsPopup = ({ children }) => {
   const [hasError1, setErrorStatus1] = useState(false);
   const [isSubmitting, setSubmitStatus] = useState(false);
 
+  const resetFormsState = () => {
+    setPopupVisible(false);
+    setInputValue('');
+    setInputValue1('');
+    setError('');
+    setErrorStatus(false);
+    setError1('');
+    setErrorStatus1(false);
+    setSubmitStatus(false);
+  };
+
   return (
     <FormsPopupContext.Provider
       value={{
@@ -40,6 +51,7 @@ export const FormsPopup = ({ children }) => {
         setError1,
         isSubmitting,
         setSubmitStatus,
+        resetFormsState,
       }}
     >
       {children}

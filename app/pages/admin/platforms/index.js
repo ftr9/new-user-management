@@ -1,8 +1,10 @@
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, RefreshControl } from 'react-native';
 import ListDisplayHeader from '@components/common/header/ListDisplayHeader';
 import DottedIconButton from '@components/common/buttons/cta/DottedIconButton';
 import PlatformCard from '@components/common/cards/admin/PlatformCard';
 import { useRouter } from 'expo-router';
+import usePlatformsStore from '@store/usePlatformsStore';
+import { useEffect } from 'react';
 
 const PlatformPage = () => {
   return (
@@ -34,11 +36,30 @@ PlatformPage.ListDisplayHeader = () => {
 };
 
 PlatformPage.DataDisplay = () => {
-  const datas = new Array(3).fill('a');
+  const { fetchPlatforms, platformsList, isFetchingPlatforms } =
+    usePlatformsStore();
+
+  useEffect(() => {
+    fetchPlatforms();
+  }, []);
+
+  if (isFetchingPlatforms && platformsList.length === 0) {
+    return <Text>✔✔💲💲🈯💹❇✳❎✅</Text>;
+  }
+
   return (
     <FlatList
-      data={datas}
-      renderItem={() => <PlatformCard />}
+      keyboardShouldPersistTaps="handled"
+      refreshing={isFetchingPlatforms}
+      refreshControl={
+        <RefreshControl
+          onRefresh={() => {
+            fetchPlatforms();
+          }}
+        />
+      }
+      data={platformsList}
+      renderItem={({ item }) => <PlatformCard {...item} />}
       keyExtractor={(item, index) => index}
     />
   );
