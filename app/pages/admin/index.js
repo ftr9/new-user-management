@@ -140,8 +140,13 @@ AdminDashBoard.CreateNewCA = () => {
 };
 
 AdminDashBoard.CreateSubadmin = () => {
+  const router = useRouter();
+
   return (
     <DottedIconButton
+      onClick={() => {
+        router.push('/pages/admin/AddSubadmin');
+      }}
       title={'Create Subadmin'}
       iconType={{
         name: 'person-add-outline',
