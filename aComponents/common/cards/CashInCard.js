@@ -5,7 +5,7 @@ import moment from 'moment/moment';
 const CashInCard = props => {
   const isAdmin = props.isAdmin;
   const BtnClickHandle = () => {
-    alert('cool');
+    alert('feature left to be implemented');
   };
 
   return (
@@ -19,7 +19,7 @@ const CashInCard = props => {
         <View className="p-2 border-dashed border-primary bg-secondary  border-[0.6px]">
           <Icon type="ionicon" name="arrow-down" size={18} color={'#228B22'} />
         </View>
-        <View className="ml-3 w-[70%]">
+        <View className="ml-3 ">
           <Text className=" font-Lato-Regular text-[16px] font-semibold mb-[3px]">
             {props?.userName}
           </Text>
@@ -31,10 +31,10 @@ const CashInCard = props => {
       </View>
       <View className="items-end">
         <Text className=" font-Lato-Regular text-primary text-[16px] font-[600]">
-          + $15
+          {props.amount > 0 ? `+ $${props.amount}` : +`$${props.amount}`}
         </Text>
         <Text className="text-[#5B5B5B] text-[10px] font-Lato-Regular mt-[3px]">
-          + $1500
+          {props.closingAmount}
         </Text>
       </View>
     </TouchableOpacity>

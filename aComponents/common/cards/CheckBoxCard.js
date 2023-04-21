@@ -3,8 +3,19 @@ import React, { useState } from 'react';
 import { CheckBox } from '@rneui/themed';
 import { P3 } from '@components/common/typography/text';
 
-const CheckBoxCard = () => {
-  const [isChecked, setChecked] = useState(false);
+const CheckBoxCard = ({
+  isDisabled,
+  onCheckBoxClicked,
+  ischecked,
+  id,
+  title = '',
+}) => {
+  const [isChecked, setChecked] = useState(ischecked);
+
+  const checkBoxClickHandle = () => {
+    setChecked(!isChecked);
+    onCheckBoxClicked(isChecked, id);
+  };
 
   return (
     <View
@@ -12,7 +23,9 @@ const CheckBoxCard = () => {
         isChecked ? 'bg-primary-15' : 'bg-tertiary-15'
       } my-2 rounded-md flex-row justify-between items-center pl-4`}
     >
-      <P3 color={'text-quaternary'}>IronMan</P3>
+      <P3 color={'text-quaternary'}>
+        {title} {isDisabled && '*(Already Inside)'}
+      </P3>
       <CheckBox
         containerStyle={{
           backgroundColor: 'transparent',
@@ -21,10 +34,8 @@ const CheckBoxCard = () => {
         size={20}
         uncheckedColor="#E03131"
         checkedColor="#228B22"
-        onPress={() => {
-          setChecked(!isChecked);
-        }}
-        disabled={false}
+        onPress={checkBoxClickHandle}
+        disabled={isDisabled}
         checked={isChecked}
       />
     </View>

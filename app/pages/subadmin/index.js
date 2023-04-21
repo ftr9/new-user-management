@@ -5,6 +5,10 @@ import DataDisplayContainer from '@components/common/display/DataDisplayContaine
 import ListDisplayHeader from '@components/common/header/ListDisplayHeader';
 import CaAndPlatformCard from '@components/common/cards/subadmin/CaAndPlatformCard';
 import { ScrollView, RefreshControl } from 'react-native';
+import useUserData from '@store/useUserData';
+import useCaStore from '@store/useCaStore';
+import { useEffect } from 'react';
+import usePlatformsStore from '@store/usePlatformsStore';
 
 const SubadminDashBoard = () => {
   return (
@@ -29,6 +33,15 @@ SubadminDashBoard.ListHeader = () => {
 
 const Datas = () => {
   const [isRefreshing, setRefreshing] = useState(false);
+  const { fetchSubadminCa, isFetchingCa, caList } = useCaStore();
+  const { setPlatformsListIds, fetchPlatforms } = usePlatformsStore();
+  const { user } = useUserData();
+
+  useEffect(() => {
+    fetchSubadminCa(Object.keys(user.data.balances));
+    setPlatformsListIds([...new Set(Object.values(user.data.balances).flat())]);
+    fetchPlatforms();
+  }, []);
 
   return (
     <ScrollView
@@ -44,11 +57,15 @@ const Datas = () => {
         />
       }
     >
-      <CaAndPlatformCard />
-      <CaAndPlatformCard />
-      <CaAndPlatformCard />
-      <CaAndPlatformCard />
-      <CaAndPlatformCard />
+      {caList.map(data => {
+        return (
+          <CaAndPlatformCard
+            key={data.id}
+            cashApp={data}
+            platforms={user.data.balances[data.id]}
+          />
+        );
+      })}
     </ScrollView>
   );
 };

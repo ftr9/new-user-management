@@ -19,7 +19,7 @@ const AdminDashBoard = () => {
     <>
       <DashBoardHeader />
       <DataDisplayContainer>
-        <View className="py-3">
+        <View className="py-2">
           <AdminDashBoard.CreateNewCA />
         </View>
 
@@ -44,7 +44,6 @@ const AdminDashBoard = () => {
 AdminDashBoard.DataDisplay = () => {
   const { fetchAdminCa, isFetchingCa, caList } = useCaStore();
   const { user } = useUserData();
-
   useEffect(() => {
     ////fetch CashApps
     fetchAdminCa(user.id)();
@@ -145,7 +144,7 @@ AdminDashBoard.CreateSubadmin = () => {
   return (
     <DottedIconButton
       onClick={() => {
-        router.push('/pages/admin/AddSubadmin');
+        router.push('/pages/admin/CreateSubadmin');
       }}
       title={'Create Subadmin'}
       iconType={{

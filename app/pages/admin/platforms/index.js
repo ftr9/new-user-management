@@ -46,6 +46,9 @@ PlatformPage.DataDisplay = () => {
   if (isFetchingPlatforms && platformsList.length === 0) {
     return <Text>✔✔💲💲🈯💹❇✳❎✅</Text>;
   }
+  if (platformsList.length === 0) {
+    return <Text>No Platforms...</Text>;
+  }
 
   return (
     <FlatList

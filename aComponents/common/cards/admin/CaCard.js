@@ -8,8 +8,26 @@ import AreYouSure from '@components/common/popup/AreYouSure';
 import useUserData from '@store/useUserData';
 import useCaStore from '@store/useCaStore';
 import FormsPopup from '@components/common/popup/FormPopUp';
-import { addDoc, arrayUnion, increment, updateDoc } from 'firebase/firestore';
-import { cashAppDocRef, platformColRef } from '@config/firebaseRefs';
+import {
+  addDoc,
+  arrayUnion,
+  getDocs,
+  increment,
+  updateDoc,
+  query,
+  where,
+  writeBatch,
+  deleteField,
+  deleteDoc,
+} from 'firebase/firestore';
+import {
+  cashAppDocRef,
+  platformColRef,
+  platformDocRef,
+  subAdminColRef,
+  subAdminDocRef,
+} from '@config/firebaseRefs';
+import { db } from '@config/firebase';
 import usePlatformsStore from '@store/usePlatformsStore';
 
 const AdminCaCard = props => {
@@ -24,7 +42,7 @@ const AdminCaCard = props => {
       >
         <AdminCaCard.CreateNewBtn caId={expandedActiveCaCard} />
         <AdminCaCard.PlatformList {...props} />
-        <AdminCaCard.DeleteBtn />
+        <AdminCaCard.DeleteBtn {...props} />
       </AdminCaCard.ButtonsListContainer>
 
       <AdminCaCard.ShowBtnToggle
@@ -144,9 +162,6 @@ AdminCaCard.PlatformList = props => {
   const { setPlatformsListIds } = usePlatformsStore();
   const router = useRouter();
   const btnClickHandle = () => {
-    if (!(props.platforms.length >= 0)) {
-      alert('there are not platforms in the given CA');
-    }
     setPlatformsListIds(props.platforms);
     router.push('/pages/admin/platforms');
   };
@@ -165,7 +180,63 @@ AdminCaCard.PlatformList = props => {
   );
 };
 
-AdminCaCard.DeleteBtn = () => {
+AdminCaCard.DeleteBtn = props => {
+  const { fetchAdminCa } = useCaStore();
+  const { user } = useUserData();
+  const onYespress = async ctx => {
+    const { setPopupVisible, setSubmitStatus } = ctx;
+
+    setSubmitStatus(true);
+    ////1) delete platform field
+    const AddedCaPlatforms = await getDocs(
+      query(platformColRef, where(`balances.${props.id}.totalBalance`, '>=', 0))
+    );
+
+    if (AddedCaPlatforms.size === 0) {
+      await deleteDoc(cashAppDocRef(props.id));
+      setSubmitStatus(false);
+      setPopupVisible(false);
+      alert('deleted CA successfully.');
+      fetchAdminCa(user.id)();
+      return;
+    }
+
+    const platformCaRemoveBatch = writeBatch(db);
+
+    AddedCaPlatforms.forEach(platformDoc => {
+      platformCaRemoveBatch.update(platformDocRef(platformDoc.id), {
+        [`balances.${props.id}`]: deleteField(),
+      });
+    });
+
+    await platformCaRemoveBatch.commit();
+
+    ////2) delete from subadmin
+    const subadminCaRemoveBatch = writeBatch(db);
+
+    const addedSubadmin = await getDocs(
+      query(
+        subAdminColRef,
+        where(`balances.${props.id}`, 'not-in', [['cscsc']])
+      )
+    );
+
+    addedSubadmin.forEach(subadminDoc => {
+      subadminCaRemoveBatch.update(subAdminDocRef(subadminDoc.id), {
+        [`balances.${props.id}`]: deleteField(),
+      });
+    });
+    await subadminCaRemoveBatch.commit();
+
+    ////3) delete ca finally ....
+    await deleteDoc(cashAppDocRef(props.id));
+
+    setSubmitStatus(false);
+    setPopupVisible(false);
+    alert('deleted CA successfully...');
+    ////4) fetch everything
+    fetchAdminCa(user.id)();
+  };
   return (
     <AreYouSure>
       <AreYouSure.CtaBtn
@@ -176,10 +247,8 @@ AdminCaCard.DeleteBtn = () => {
         Delete this CA
       </AreYouSure.CtaBtn>
       <AreYouSure.BottomSheet
-        title={'Are you sure want to deleted this ?'}
-        onYesPress={() => {
-          alert('hello world');
-        }}
+        title={'Are you sure want to delete this CA?'}
+        onYesPress={onYespress}
       ></AreYouSure.BottomSheet>
     </AreYouSure>
   );

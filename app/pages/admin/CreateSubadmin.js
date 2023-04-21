@@ -70,7 +70,7 @@ const AddSubadmin = () => {
     ////3) if not then create subadmin
     await addDoc(subAdminColRef, {
       balances: {},
-      username: inputValue.username,
+      username: inputValue.username.trim(),
       password: inputValue.password,
     });
     alert(`created subadmin ${inputValue.username} successfully`);

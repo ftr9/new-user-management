@@ -19,25 +19,14 @@ import NormalButton from '@components/common/buttons/cta/NormalButton';
 import { tertiaryColor } from '@constants/color';
 import BackButton from '@components/common/buttons/cta/BackButton';
 import { H6 } from '@components/common/typography/heading';
+import useSubadminsStore from '@store/subadmin/useSubadminsStore';
 
 const EditSubadmin = () => {
-  const [isFetchingSubadmin, setFetchingSubadmins] = useState(false);
-  const [subadminsList, setSubadminsList] = useState([]);
-  const fetchSubadmins = async () => {
-    setFetchingSubadmins(true);
-    setSubadminsList([]);
-    const subadminDocRef = await getDocs(
-      query(subAdminColRef, orderBy('username', 'asc'))
-    );
-    const fetchedSubadmins = [];
-    subadminDocRef.forEach(doc => {
-      fetchedSubadmins.push({ id: doc.id, username: doc.data().username });
-    });
-    setSubadminsList(fetchedSubadmins);
-    setFetchingSubadmins(false);
-  };
+  const { isFetchingSubadminsData, subadminsList, fetchAllSubadmins } =
+    useSubadminsStore();
+
   useEffect(() => {
-    fetchSubadmins();
+    fetchAllSubadmins();
   }, []);
 
   return (
@@ -45,7 +34,7 @@ const EditSubadmin = () => {
       <DashBoardHeader />
       <DataDisplayContainer>
         <EditSubadmin.Header />
-        {isFetchingSubadmin && subadminsList.length === 0 ? (
+        {isFetchingSubadminsData && subadminsList.length === 0 ? (
           <Text>⛏⛏⛏🔨🔨🔨🔐🔑 LOADING !!!!!!</Text>
         ) : (
           <FlashList
@@ -53,7 +42,10 @@ const EditSubadmin = () => {
             data={subadminsList}
             renderItem={({ item }) => {
               return (
-                <EditSubadmin.Card {...item} fetchSubadmins={fetchSubadmins} />
+                <EditSubadmin.Card
+                  {...item}
+                  fetchSubadmins={fetchAllSubadmins}
+                />
               );
             }}
             estimatedItemSize={30}

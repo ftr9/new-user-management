@@ -56,6 +56,8 @@ const Login = () => {
       return;
     }
 
+    console.log(inputValue.username, inputValue.password);
+
     /////2) fetch admin or subadmin
     setIsLogging(true);
     let userDocSnapShot;

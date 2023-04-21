@@ -10,11 +10,14 @@ const AreYouSureContext = createContext();
 
 const AreYouSure = ({ children }) => {
   const [isPopupVisible, setPopupVisible] = useState(false);
+  const [isSubmitting, setSubmitStatus] = useState(false);
   return (
     <AreYouSureContext.Provider
       value={{
         isPopupVisible,
         setPopupVisible,
+        isSubmitting,
+        setSubmitStatus,
       }}
     >
       {children}
@@ -77,12 +80,16 @@ AreYouSure.Header = ({ title }) => {
 };
 
 const YesBtn = ({ onBtnPress }) => {
+  const context = useContext(AreYouSureContext);
   return (
     <View className="my-2">
       <NormalButton
-        onClick={onBtnPress}
+        onClick={() => {
+          onBtnPress(context);
+        }}
         title={'Yes'}
         color={tertiaryColor}
+        isLoading={context.isSubmitting}
       ></NormalButton>
     </View>
   );

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { cashAppColRef } from '@config/firebaseRefs';
-import { getDocs, orderBy, query, where } from 'firebase/firestore';
+import { cashAppColRef, subAdminColRef } from '@config/firebaseRefs';
+import { documentId, getDocs, orderBy, query, where } from 'firebase/firestore';
 
 const useCaStore = create(
   immer(set => {
@@ -38,6 +38,24 @@ const useCaStore = create(
             caList: fetchedCashApps,
           }));
         };
+      },
+      fetchSubadminCa: async caIds => {
+        set(state => {
+          state.isFetchingCa = true;
+          caList = [];
+        });
+        const datas = await getDocs(
+          query(cashAppColRef, where(documentId(), 'in', caIds))
+        );
+        const fetchedCashApps = [];
+        datas.forEach(caDocs => {
+          fetchedCashApps.push({ ...caDocs.data(), id: caDocs.id });
+        });
+        set(state => ({
+          ...state,
+          isFetchingCa: false,
+          caList: fetchedCashApps,
+        }));
       },
     };
   })

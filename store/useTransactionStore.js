@@ -20,6 +20,7 @@ const useTransactionStore = create(
             orderBy('createdAt', 'desc')
           )
         );
+
         let fetchedTransactionData = [];
         transactionData.forEach(transactionDoc => {
           fetchedTransactionData.push({

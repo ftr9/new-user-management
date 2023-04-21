@@ -12,18 +12,27 @@ import usePlatformsStore from '@store/usePlatformsStore';
 import useUserData from '@store/useUserData';
 import {
   addDoc,
+  arrayRemove,
   collection,
+  deleteField,
   getDoc,
+  query,
+  getDocs,
   increment,
   serverTimestamp,
   updateDoc,
+  where,
+  writeBatch,
 } from 'firebase/firestore';
 import {
   platformColRef,
   platformDocRef,
   cashAppDocRef,
   platformTransactionColRef,
+  subAdminColRef,
+  subAdminDocRef,
 } from '@config/firebaseRefs';
+import { db } from '@config/firebase';
 
 const PlatformCard = props => {
   const { expandedActiveCaCard } = useCaStore();
@@ -34,7 +43,7 @@ const PlatformCard = props => {
       <CardInfoHeader
         documentId={props.id}
         title={props.name}
-        amount={props.balances[expandedActiveCaCard].totalBalance}
+        amount={props?.balances[expandedActiveCaCard]?.totalBalance}
         currentPage={'platforms'}
         refetchData={fetchPlatforms}
       />
@@ -50,7 +59,7 @@ const PlatformCard = props => {
           />
         </View>
         <View className="w-[49%]">
-          <PlatformCard.AddSubadmin />
+          <PlatformCard.AddSubadmin {...props} />
         </View>
       </View>
       <View className="flex-row justify-between items-center mb-2">
@@ -67,23 +76,25 @@ const PlatformCard = props => {
           <PlatformCard.RedeemBtn {...props} />
         </View>
         <View className="w-[58%]">
-          <PlatformCard.DeleteBtn />
+          <PlatformCard.DeleteBtn {...props} />
         </View>
       </View>
 
       <View>
-        <PlatformCard.RemoveSubAdmin />
+        <PlatformCard.RemoveSubAdmin {...props} />
       </View>
     </View>
   );
 };
 
-PlatformCard.AddSubadmin = () => {
+PlatformCard.AddSubadmin = props => {
   const router = useRouter();
   return (
     <DottedIconButton
       onClick={() => {
-        router.push('/pages/admin/platforms/AddSubadmin');
+        router.push(
+          `/pages/admin/platforms/AddSubadmin?platformId=${props.id}`
+        );
       }}
       title={'Add Subadmin'}
       iconType={{
@@ -148,7 +159,7 @@ PlatformCard.RechargeBtn = props => {
               caId: expandedActiveCaCard,
               isCashIn: true,
               isAdmin: true,
-              userName: `Admin(${inputValue1 ? inputValue : 'XXXX'})`,
+              userName: `Admin(${inputValue1 ? inputValue1 : 'XXXX'})`,
               userId: user.id,
               createdAt: serverTimestamp(),
             });
@@ -271,7 +282,6 @@ PlatformCard.RedeemBtn = props => {
   const { id } = props;
   const { user } = useUserData();
   const { expandedActiveCaCard } = useCaStore();
-  const { fetchPlatforms } = usePlatformsStore();
 
   return (
     <FormsPopup>
@@ -334,7 +344,56 @@ PlatformCard.RedeemBtn = props => {
   );
 };
 
-PlatformCard.DeleteBtn = () => {
+PlatformCard.DeleteBtn = props => {
+  const { expandedActiveCaCard } = useCaStore();
+  const onYesPress = async ctx => {
+    const { setPopupVisible, setSubmitStatus } = ctx;
+
+    setSubmitStatus(true);
+    ////1) get subadmins
+    const totalSubadmins = await getDocs(
+      query(
+        subAdminColRef,
+        where(`balances.${expandedActiveCaCard}`, 'array-contains', props.id)
+      )
+    );
+
+    const subAdminsId = [];
+    totalSubadmins.forEach(data => {
+      subAdminsId.push(data.id);
+    });
+
+    const batch = writeBatch(db);
+    subAdminsId.forEach(subadmin => {
+      batch.update(subAdminDocRef(subadmin), {
+        [`balances.${expandedActiveCaCard}`]: arrayRemove(props.id),
+      });
+    });
+    await batch.commit();
+
+    ////2) get platform
+    const platformDoc = await getDoc(platformDocRef(props.id));
+
+    ////3) update cash App
+    await updateDoc(cashAppDocRef(expandedActiveCaCard), {
+      platforms: arrayRemove(props.id),
+      totalBalance: increment(
+        -1 * platformDoc.data().balances[expandedActiveCaCard].totalBalance
+      ),
+      totalGroups: increment(-1),
+    });
+
+    ////4) update platform
+    await updateDoc(platformDocRef(props.id), {
+      [`balances.${expandedActiveCaCard}`]: deleteField(),
+      totalSubadmins: increment(-1 * subAdminsId.length),
+    });
+
+    setSubmitStatus(false);
+    setPopupVisible(false);
+    alert('removed platform successfully....');
+  };
+
   return (
     <AreYouSure>
       <AreYouSure.CtaBtn
@@ -342,24 +401,26 @@ PlatformCard.DeleteBtn = () => {
         bgColor={'bg-tertiary-20'}
         borderColor={'border-tertiary'}
       >
-        Delete Platform
+        Remove Platform
       </AreYouSure.CtaBtn>
       <AreYouSure.BottomSheet
-        onYesPress={() => {
-          alert('deleted successfully...');
-        }}
-        title={'Are your sure want to delete this platform ?'}
+        onYesPress={onYesPress}
+        title={'Are youe sure want to remove this platform ?'}
       />
     </AreYouSure>
   );
 };
 
-PlatformCard.RemoveSubAdmin = () => {
+PlatformCard.RemoveSubAdmin = props => {
+  const router = useRouter();
+
   return (
     <DottedIconButton
       title={'Remove Subadmin'}
       onClick={() => {
-        alert('hilo');
+        router.push(
+          `/pages/admin/platforms/RemoveSubadmin?platformId=${props.id}`
+        );
       }}
       bgColor={'bg-tertiary-20'}
       borderColor={'border-tertiary'}
