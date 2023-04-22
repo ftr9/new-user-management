@@ -4,7 +4,21 @@
     "web": {
       "bundler": "metro"
     },
-    "name": "newusermgmt",
-    "slug": "newusermgmt"
+    "name": "usermanagement",
+    "slug": "usermanagement",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E9ECEF"
+    },
+    "icon": "./assets/images/appicon.png",
+    "extra": {
+      "eas": {
+        "projectId": "9efe56dd-690f-4860-8d56-00734754ec25"
+      }
+    },
+    "android": {
+      "package": "com.luhardotel.usermanagement"
+    }
   }
 }

@@ -10,6 +10,11 @@ const useUserData = create(
           state.user = fetchedUser;
         });
       },
+      unSetUser: () => {
+        set(state => {
+          state.user = {};
+        });
+      },
     };
   })
 );

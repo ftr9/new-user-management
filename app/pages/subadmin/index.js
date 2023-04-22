@@ -4,14 +4,22 @@ import DashBoardHeader from '@components/common/header/DashBoardHeader';
 import DataDisplayContainer from '@components/common/display/DataDisplayContainer';
 import ListDisplayHeader from '@components/common/header/ListDisplayHeader';
 import CaAndPlatformCard from '@components/common/cards/subadmin/CaAndPlatformCard';
-import { ScrollView, RefreshControl } from 'react-native';
+import { ScrollView, RefreshControl, BackHandler } from 'react-native';
 import useUserData from '@store/useUserData';
 import useCaStore from '@store/useCaStore';
 import { useEffect } from 'react';
 import usePlatformsStore from '@store/usePlatformsStore';
 import LoadingIndication from '@components/common/Loading';
+import ExitApp from '@utils/ExitApp';
 
 const SubadminDashBoard = () => {
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', ExitApp);
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', ExitApp);
+    };
+  }, []);
+
   return (
     <>
       <DashBoardHeader />

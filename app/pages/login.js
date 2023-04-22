@@ -10,6 +10,7 @@ import ExitApp from '@utils/ExitApp';
 import { query, where, getDocs, limit } from 'firebase/firestore';
 import { adminColRef, subAdminColRef } from '@config/firebaseRefs';
 import useUserData from '@store/useUserData';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
   const router = useRouter();
@@ -17,8 +18,8 @@ const Login = () => {
   const [isLoggingIn, setIsLogging] = useState(false);
   const [isAdminLogin, setAdminLogin] = useState(false);
   const [inputValue, setInputValue] = useState({
-    username: 'admin',
-    password: 'key@1918',
+    username: '',
+    password: '',
   });
   const [inputFieldErr, setInputFieldErr] = useState({
     isUsernameError: false,
@@ -56,62 +57,68 @@ const Login = () => {
       return;
     }
 
-    console.log(inputValue.username, inputValue.password);
+    //console.log(inputValue.username, inputValue.password);
 
     /////2) fetch admin or subadmin
-    setIsLogging(true);
-    let userDocSnapShot;
-    const queryCondition = where('username', '==', inputValue.username);
-    if (isAdminLogin) {
-      userDocSnapShot = await getDocs(
-        query(adminColRef, queryCondition, limit(1))
-      );
-    } else {
-      userDocSnapShot = await getDocs(
-        query(subAdminColRef, queryCondition, limit(1))
-      );
-    }
+    try {
+      setIsLogging(true);
+      let userDocSnapShot;
+      const queryCondition = where('username', '==', inputValue.username);
+      if (isAdminLogin) {
+        userDocSnapShot = await getDocs(
+          query(adminColRef, queryCondition, limit(1))
+        );
+      } else {
+        userDocSnapShot = await getDocs(
+          query(subAdminColRef, queryCondition, limit(1))
+        );
+      }
 
-    ////3) check if admin or subadmin exists
-    if (userDocSnapShot.empty) {
-      setInputFieldErr(err => ({ ...err, isUsernameError: true }));
-      setInputFieldErrMsg(err => ({
-        ...err,
-        username: '* username is not registered',
-      }));
+      ////3) check if admin or subadmin exists
+      if (userDocSnapShot.empty) {
+        setInputFieldErr(err => ({ ...err, isUsernameError: true }));
+        setInputFieldErrMsg(err => ({
+          ...err,
+          username: '* username is not registered',
+        }));
+        setIsLogging(false);
+        return;
+      }
+
+      ////5) extract user data
+      let user;
+      userDocSnapShot.forEach(userData => {
+        user = {
+          id: userData.id,
+          data: userData.data(),
+          isAdmin: isAdminLogin ? true : false,
+        };
+      });
+
+      ////6) check for password
+      if (inputValue.password !== user.data.password) {
+        setInputFieldErr(state => ({ ...state, isPasswordError: true }));
+        setInputFieldErrMsg(state => ({
+          password: '* incorrect password try again !!',
+        }));
+        setIsLogging(false);
+        return;
+      }
+
+      ////7) update global store
+      setUser(user);
+      ////8) store to the async storage
+      await AsyncStorage.setItem('@user', JSON.stringify(user));
       setIsLogging(false);
-      return;
-    }
 
-    ////5) extract user data
-    let user;
-    userDocSnapShot.forEach(userData => {
-      user = {
-        id: userData.id,
-        data: userData.data(),
-        isAdmin: isAdminLogin ? true : false,
-      };
-    });
-
-    ////6) check for password
-    if (inputValue.password !== user.data.password) {
-      setInputFieldErr(state => ({ ...state, isPasswordError: true }));
-      setInputFieldErrMsg(state => ({
-        password: '* incorrect password try again !!',
-      }));
-      setIsLogging(false);
-      return;
-    }
-
-    ////7) update global store
-    setUser(user);
-    setIsLogging(false);
-
-    ////8) route them to respective dashboard
-    if (isAdminLogin) {
-      router.push('/pages/admin');
-    } else {
-      router.push('/pages/subadmin');
+      ////8) route them to respective dashboard
+      if (isAdminLogin) {
+        router.push('/pages/admin');
+      } else {
+        router.push('/pages/subadmin');
+      }
+    } catch (err) {
+      BackHandler.exitApp();
     }
 
     //update login store and redirect to dashboard
