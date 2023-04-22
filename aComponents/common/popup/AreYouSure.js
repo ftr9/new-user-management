@@ -1,10 +1,10 @@
 import { BottomSheet } from '@rneui/themed';
 import DottedIconButton from '../buttons/cta/DottedIconButton';
 import { createContext, useContext, useState } from 'react';
-import NormalButton from '../buttons/cta/NormalButton';
 import { primaryColor, secondaryColor, tertiaryColor } from '@constants/color';
 import { View } from 'react-native';
 import { H6 } from '../typography/heading';
+import NormalButton from '../buttons/cta/NormalButton';
 
 const AreYouSureContext = createContext();
 
@@ -39,6 +39,20 @@ AreYouSure.CtaBtn = ({ children, iconName, bgColor, borderColor }) => {
       iconType={{
         name: iconName,
         type: 'ionicon',
+      }}
+    />
+  );
+};
+
+AreYouSure.CtaNormalBtn = ({ title }) => {
+  const { setPopupVisible } = useContext(AreYouSureContext);
+  return (
+    <NormalButton
+      size={'small'}
+      title={title}
+      color={tertiaryColor}
+      onClick={() => {
+        setPopupVisible(true);
       }}
     />
   );
@@ -101,7 +115,7 @@ const NoBtn = () => {
     <View>
       <NormalButton
         onClick={() => setPopupVisible(false)}
-        title={'no'}
+        title={'No'}
         color={primaryColor}
       />
     </View>

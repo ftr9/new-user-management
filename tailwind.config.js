@@ -19,6 +19,7 @@ module.exports = {
         'tertiary-20': 'rgba(224,49,49,0.20)',
         'tertiary-40': 'rgba(224,49,49,0.40)',
         quaternary: '#000000',
+        quaternary1: '#FFA94D',
       },
       colors: {
         primary: '#228B22',
@@ -30,6 +31,7 @@ module.exports = {
         'tertiary-20': 'rgba(224,49,49,0.20)',
         quaternary: '#000000',
         unselected: '#A6A6A6',
+        quaternary1: '#FFA94D',
       },
     },
   },

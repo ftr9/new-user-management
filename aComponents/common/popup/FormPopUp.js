@@ -173,6 +173,7 @@ const FormsTextInputField = ({ label, placeholder }) => {
       isNumericType={false}
       onChangeText={val => setInputValue(val)}
       value={inputValue}
+      maxLength={50}
     />
   );
 };
@@ -189,6 +190,7 @@ const FormsTextInputField1 = ({ label, placeholder }) => {
       hasError={hasError1}
       canBeFocused={false}
       isNumericType={false}
+      maxLength={100}
       onChangeText={val => setInputValue1(val)}
       value={inputValue1}
     />

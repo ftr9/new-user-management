@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { platformDocRef, subAdminDocRef } from '@config/firebaseRefs';
 import { db } from '@config/firebase';
+import LoadingIndication from '@components/common/Loading';
 
 const RemoveSubadmin = () => {
   const { fetchAllSubadmins, isFetchingSubadminsData, subadminsList } =
@@ -23,7 +24,6 @@ const RemoveSubadmin = () => {
   const { expandedActiveCaCard } = useCaStore();
   const { platformId } = useSearchParams();
   const [selectedSubadmins, setSelectedSubadmins] = useState([]);
-  const [isRemoving, setRemoving] = useState();
   const router = useRouter();
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const RemoveSubadmin = () => {
   }, []);
 
   if (subadminsList.length === 0 && isFetchingSubadminsData) {
-    return <Text>🥇🥈🥉🏅🎖</Text>;
+    return <LoadingIndication title={"Loading Subadmin's !!!"} />;
   }
 
   const checkBoxClick = (isChecked, id) => {
@@ -62,7 +62,9 @@ const RemoveSubadmin = () => {
     await batch.commit();
 
     await updateDoc(platformDocRef(platformId), {
-      totalSubadmins: increment(-1 * selectedSubadmins.length),
+      [`balances.${expandedActiveCaCard}.totalSubadmins`]: increment(
+        -1 * selectedSubadmins.length
+      ),
     });
 
     alert('removed subadmin successfully');

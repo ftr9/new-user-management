@@ -38,6 +38,7 @@ const PlatformCard = props => {
   const { expandedActiveCaCard } = useCaStore();
   const { fetchPlatforms, setActivePlatformId } = usePlatformsStore();
   const router = useRouter();
+
   return (
     <View className="border-[0.8px] my-3 py-3 px-[6px] border-primary rounded-md">
       <CardInfoHeader
@@ -45,6 +46,9 @@ const PlatformCard = props => {
         title={props.name}
         amount={props?.balances[expandedActiveCaCard]?.totalBalance}
         currentPage={'platforms'}
+        userOrGroupsCount={
+          props?.balances[expandedActiveCaCard]?.totalSubadmins
+        }
         refetchData={fetchPlatforms}
       />
       <View className="flex-row justify-between mt-3 mb-2">
@@ -59,29 +63,29 @@ const PlatformCard = props => {
           />
         </View>
         <View className="w-[49%]">
-          <PlatformCard.AddSubadmin {...props} />
+          <PlatformCard.SellBalanceBtn {...props} />
         </View>
       </View>
       <View className="flex-row justify-between items-center mb-2">
-        <View className="w-[40%]">
+        <View className="w-[49%]">
           <PlatformCard.RechargeBtn {...props} />
         </View>
-        <View className="w-[58%]">
-          <PlatformCard.SellBalanceBtn {...props} />
+        <View className="w-[49%]">
+          <PlatformCard.RedeemBtn {...props} />
         </View>
       </View>
 
       <View className="flex-row justify-between items-center mb-2">
-        <View className="w-[40%]">
-          <PlatformCard.RedeemBtn {...props} />
+        <View className="w-[49%]">
+          <PlatformCard.AddSubadmin {...props} />
         </View>
-        <View className="w-[58%]">
-          <PlatformCard.DeleteBtn {...props} />
+        <View className="w-[49%]">
+          <PlatformCard.RemoveSubAdmin {...props} />
         </View>
       </View>
 
       <View>
-        <PlatformCard.RemoveSubAdmin {...props} />
+        <PlatformCard.DeleteBtn {...props} />
       </View>
     </View>
   );
@@ -138,6 +142,7 @@ PlatformCard.RechargeBtn = props => {
             if (value <= 0 || isNaN(value)) {
               setError('* balance should be more than zero');
               setErrorStatus(true);
+              return;
             }
 
             setSubmitStatus(true);
@@ -238,16 +243,24 @@ PlatformCard.SellBalanceBtn = props => {
               return;
             }
 
+            const platformBalance =
+              platformDoc.data().balances[expandedActiveCaCard].totalBalance;
+            if (platformBalance < amount) {
+              setError('* Balance Insufficient');
+              setErrorStatus(true);
+              setSubmitStatus(false);
+              return;
+            }
+
             /////2) add to transaction
             addDoc(platformTransactionColRef(id), {
               amount: -1 * amount,
               caId: expandedActiveCaCard,
-              closingAmount:
-                platformDoc.data().balances[expandedActiveCaCard].totalBalance -
-                amount,
+              closingAmount: platformBalance - amount,
               createdAt: serverTimestamp(),
               isAdmin: true,
               isCashIn: false,
+              isBalanceSold: true,
               isDeleted: false,
               userId: user.id,
               userName: `Admin(${inputValue1 ? inputValue1 : 'XXXX'})`,
@@ -315,8 +328,8 @@ PlatformCard.RedeemBtn = props => {
 
             const amount = parseFloat(inputValue);
 
-            if (amount < 0 || isNaN(amount)) {
-              setError('* amount cannot be negative');
+            if (amount <= 0 || isNaN(amount)) {
+              setError('* amount cannot be negative or zero');
               setErrorStatus(true);
               return;
             }
@@ -346,6 +359,8 @@ PlatformCard.RedeemBtn = props => {
 
 PlatformCard.DeleteBtn = props => {
   const { expandedActiveCaCard } = useCaStore();
+  const { platformListIds, setPlatformsListIds, fetchPlatforms } =
+    usePlatformsStore();
   const onYesPress = async ctx => {
     const { setPopupVisible, setSubmitStatus } = ctx;
 
@@ -389,9 +404,15 @@ PlatformCard.DeleteBtn = props => {
       totalSubadmins: increment(-1 * subAdminsId.length),
     });
 
+    ////5) remove platform Id from platformListID's
+    setPlatformsListIds(
+      platformListIds.filter(platformId => platformId !== props.id)
+    );
     setSubmitStatus(false);
     setPopupVisible(false);
-    alert('removed platform successfully....');
+    alert('Removed platform successfully.');
+    ////6 fetch all the remaining platforms
+    fetchPlatforms();
   };
 
   return (
@@ -405,7 +426,7 @@ PlatformCard.DeleteBtn = props => {
       </AreYouSure.CtaBtn>
       <AreYouSure.BottomSheet
         onYesPress={onYesPress}
-        title={'Are youe sure want to remove this platform ?'}
+        title={'Are you sure want to remove this platform ?'}
       />
     </AreYouSure>
   );
@@ -416,7 +437,7 @@ PlatformCard.RemoveSubAdmin = props => {
 
   return (
     <DottedIconButton
-      title={'Remove Subadmin'}
+      title={'Del Subadmin'}
       onClick={() => {
         router.push(
           `/pages/admin/platforms/RemoveSubadmin?platformId=${props.id}`

@@ -125,7 +125,10 @@ AdminCaCard.CreateNewBtn = ({ caId }) => {
                 name: inputValue,
                 totalSubadmins: 0,
               };
-              newPlatformData.balances[caId] = { totalBalance: 0 };
+              newPlatformData.balances[caId] = {
+                totalBalance: 0,
+                totalSubadmins: 0,
+              };
 
               setSubmitStatus(true);
               ////2)add to the platforms collection
@@ -262,7 +265,8 @@ AdminCaCard.ShowBtnToggle = ({ btnClickHandle, isButtonsVisible }) => {
         backgroundColor: 'red',
         position: 'absolute',
         bottom: -30,
-        left: 0,
+        left: '50%',
+        transform: [{ translateX: -25 }],
       }}
       rounded
       avatarStyle={{

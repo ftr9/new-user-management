@@ -40,6 +40,13 @@ const useCaStore = create(
         };
       },
       fetchSubadminCa: async caIds => {
+        if (caIds.length === 0) {
+          set(state => ({
+            ...state,
+            caList: [],
+          }));
+          return;
+        }
         set(state => {
           state.isFetchingCa = true;
           caList = [];

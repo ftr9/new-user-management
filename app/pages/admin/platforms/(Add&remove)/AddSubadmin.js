@@ -20,6 +20,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '@config/firebase';
+import LoadingIndication from '@components/common/Loading';
 
 ////Has ?platformId=weuifh348fh as a query params
 
@@ -65,7 +66,9 @@ const AddSubadmin = () => {
 
     ////3> update platforms
     await updateDoc(platformDocRef(platformId), {
-      totalSubadmins: increment(selectedSubadmins.length),
+      [`balances.${expandedActiveCaCard}.totalSubadmins`]: increment(
+        selectedSubadmins.length
+      ),
     });
 
     setAddingStatus(false);
@@ -88,7 +91,7 @@ const AddSubadmin = () => {
   }, []);
 
   if (subadminsList.length === 0 && isFetchingSubadminsData) {
-    return <Text>🥇🥈🥉🏅🎖</Text>;
+    return <LoadingIndication title={'Loading Subadmins !!!'} />;
   }
   return (
     <>

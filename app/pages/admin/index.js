@@ -1,4 +1,10 @@
-import { View, FlatList, Text, RefreshControl } from 'react-native';
+import {
+  View,
+  FlatList,
+  Text,
+  RefreshControl,
+  BackHandler,
+} from 'react-native';
 import DashBoardHeader from '@components/common/header/DashBoardHeader';
 import DataDisplayContainer from '@components/common/display/DataDisplayContainer';
 import DottedIconButton from '@components/common/buttons/cta/DottedIconButton';
@@ -13,8 +19,21 @@ import { useEffect } from 'react';
 import useUserData from '@store/useUserData';
 import { cashAppColRef } from '@config/firebaseRefs';
 import { addDoc, serverTimestamp } from 'firebase/firestore';
+import LoadingIndication from '@components/common/Loading';
+
+const ExitAppFunc = () => {
+  BackHandler.exitApp();
+};
 
 const AdminDashBoard = () => {
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', ExitAppFunc);
+
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', ExitAppFunc);
+    };
+  }, []);
+
   return (
     <>
       <DashBoardHeader />
@@ -50,7 +69,7 @@ AdminDashBoard.DataDisplay = () => {
   }, []);
 
   if (isFetchingCa && caList.length === 0) {
-    return <Text>Fetching the Ca PLease wait .....</Text>;
+    return <LoadingIndication title={'Fetching CA list !!!'} />;
   }
 
   return (

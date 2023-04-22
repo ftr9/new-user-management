@@ -17,6 +17,7 @@ const CaAndPlatformCard = ({ cashApp, platforms }) => {
         documentId={cashApp.id}
         title={cashApp.name}
         amount={cashApp.totalBalance}
+        userOrGroupsCount={cashApp.totalGroups}
         currentPage={'subadmin'}
       />
       {platforms.map(platformId => {

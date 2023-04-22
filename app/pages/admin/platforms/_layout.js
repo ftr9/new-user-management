@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import BackBtnHeader from '@components/common/header/BackBtnHeader';
 import { Slot } from 'expo-router';
 import DataDisplayContainer from '@components/common/display/DataDisplayContainer';
@@ -7,11 +7,7 @@ import DataDisplayContainer from '@components/common/display/DataDisplayContaine
 const PlatformLayout = () => {
   return (
     <>
-      <BackBtnHeader>
-        <BackBtnHeader.BackBtn />
-        <BackBtnHeader.Title />
-        <BackBtnHeader.AmountDisplay />
-      </BackBtnHeader>
+      <BackBtnHeader />
       <DataDisplayContainer>
         <Slot />
       </DataDisplayContainer>

@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Slot, Tabs } from 'expo-router';
 
 import { primaryColor, secondaryColor, tertiaryColor } from '@constants/color';
@@ -21,12 +21,16 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
+  onSnapshot,
+  runTransaction,
+  doc,
 } from 'firebase/firestore';
 import {
   platformTransactionColRef,
   platformDocRef,
   cashAppDocRef,
 } from '@config/firebaseRefs';
+import { db } from '@config/firebase';
 
 const tabBarCommonOptions = {
   headerShown: false,
@@ -175,11 +179,36 @@ const TransactionLayout = () => {
 };
 
 TransactionLayout.ListDisplayHeader = () => {
+  const [data, setData] = useState({ name: '', amount: 0 });
+  const { activePlatformId } = usePlatformsStore();
+  const { expandedActiveCaCard } = useCaStore();
+
+  useEffect(() => {
+    const unSubscribePlatformData = onSnapshot(
+      platformDocRef(activePlatformId),
+      snapshot => {
+        const updatedData = {
+          name: snapshot?.data()?.name,
+          amount:
+            snapshot?.data()?.balances[expandedActiveCaCard]?.totalBalance,
+        };
+
+        setData(updatedData);
+      }
+    );
+    return () => {
+      unSubscribePlatformData();
+    };
+  }, []);
+
   return (
     <ListDisplayHeader>
-      <ListDisplayHeader.LeftContent title={'IronMan(transactions)'} />
+      <ListDisplayHeader.LeftContent title={data?.name} />
       <ListDisplayHeader.RightContent>
-        <NormalStaticButton style={'bg-primary-20'} title={'total = +500'} />
+        <NormalStaticButton
+          style={'bg-primary-20'}
+          title={'$' + data?.amount}
+        />
       </ListDisplayHeader.RightContent>
     </ListDisplayHeader>
   );
@@ -257,43 +286,64 @@ TransactionLayout.CashInAndOut = () => {
     if (value <= 0 || isNaN(value)) {
       setError('* balance should be more than zero');
       setErrorStatus(true);
-    }
-
-    setSubmitStatus(true);
-    ////2) get platform balance
-    const platform = await getDoc(platformDocRef(id));
-    if (!platform.exists()) {
-      alert('failed to reacharge !! something went wrong');
-      setSubmitStatus(false);
       return;
     }
 
-    ////3) Add to the transaction of platform
-    await addDoc(platformTransactionColRef(id), {
-      amount: -1 * value,
-      closingAmount:
-        platform.data().balances[expandedActiveCaCard].totalBalance - value,
-      isDeleted: false,
-      caId: expandedActiveCaCard,
-      isCashIn: false,
-      isAdmin: false,
-      userName: `${user.data.username} (${inputValue1 ? inputValue1 : 'XXXX'})`,
-      userId: user.id,
-      createdAt: serverTimestamp(),
-    });
+    setSubmitStatus(true);
+    try {
+      await runTransaction(db, async transaction => {
+        ////2) get platform balance
+        const platform = await transaction.get(platformDocRef(id));
+        if (!platform.exists()) {
+          alert('failed to recharge !! something went wrong');
+          setSubmitStatus(false);
+          return;
+        }
 
-    ////4) Add to the total Balance of platforms
-    await updateDoc(platformDocRef(id), {
-      [`balances.${expandedActiveCaCard}.totalBalance`]: increment(-1 * value),
-    });
+        const platformBalance =
+          platform.data().balances[expandedActiveCaCard].totalBalance;
 
-    ////5) Add to the total Balance of CA
-    await updateDoc(cashAppDocRef(expandedActiveCaCard), {
-      totalBalance: increment(-1 * value),
-    });
+        if (platformBalance < inputValue) {
+          setError('* Insufficient Balance');
+          setErrorStatus(true);
+          setSubmitStatus(false);
+          return;
+        }
 
-    alert(`Recharged ${value}$ successfully`);
-    resetFormsState();
+        const newTransactionRef = doc(platformTransactionColRef(id));
+
+        transaction.set(newTransactionRef, {
+          amount: -1 * value,
+          closingAmount: platformBalance - value,
+          isDeleted: false,
+          caId: expandedActiveCaCard,
+          isCashIn: false,
+          isAdmin: false,
+          userName: `${user.data.username} (${
+            inputValue1 ? inputValue1 : 'XXXX'
+          })`,
+          userId: user.id,
+          createdAt: serverTimestamp(),
+        });
+
+        ////4) Add to the total Balance of platforms
+        await transaction.update(platformDocRef(id), {
+          [`balances.${expandedActiveCaCard}.totalBalance`]: increment(
+            -1 * value
+          ),
+        });
+
+        ////5) Add to the total Balance of CA
+        await transaction.update(cashAppDocRef(expandedActiveCaCard), {
+          totalBalance: increment(-1 * value),
+        });
+
+        alert(`Recharged ${value}$ successfully`);
+        resetFormsState();
+      });
+    } catch (err) {
+      alert('sometring went wrong please try again ...');
+    }
 
     ////6)fetch again everything
   };
@@ -308,6 +358,10 @@ TransactionLayout.CashInAndOut = () => {
             <FormsPopup.FormsNumericInputField
               label={'Enter the recharge Amount'}
               placeholder={''}
+            />
+            <FormsPopup.FormsTextInputField1
+              label={'Enter the remarks (optional)'}
+              placeholder={'Remarks'}
             />
             <FormsPopup.FormsSubmitButton submitClickHandle={onCashInClick}>
               Recharge
@@ -329,6 +383,10 @@ TransactionLayout.CashInAndOut = () => {
             <FormsPopup.FormsNumericInputField
               label={'Enter the redeem amount'}
               placeholder={''}
+            />
+            <FormsPopup.FormsTextInputField1
+              label={'Enter remarks (optional)'}
+              placeholder={'Remarks'}
             />
             <FormsPopup.FormsSubmitButton
               submitClickHandle={onCashOutClick}

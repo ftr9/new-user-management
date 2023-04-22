@@ -18,7 +18,7 @@ const InputField = ({
   useEffect(() => {
     if (canBeFocused) {
       setTimeout(() => {
-        inputRef.current.focus();
+        inputRef?.current?.focus();
       }, 100);
     }
   }, []);

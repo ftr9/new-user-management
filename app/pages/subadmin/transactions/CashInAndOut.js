@@ -1,4 +1,4 @@
-import { View, Text, FlatList } from 'react-native';
+import { Text, RefreshControl } from 'react-native';
 import CashInCard from '@components/common/cards/CashInCard';
 import CashOutCard from '@components/common/cards/CashOutCard';
 import useCaStore from '@store/useCaStore';
@@ -6,6 +6,9 @@ import usePlatformsStore from '@store/usePlatformsStore';
 import { useEffect } from 'react';
 import useTransactionStore from '@store/useTransactionStore';
 import { FlashList } from '@shopify/flash-list';
+import { orderBy, query, where } from 'firebase/firestore';
+import { platformTransactionColRef } from '@config/firebaseRefs';
+import LoadingIndication from '@components/common/Loading';
 
 const CashInAndOut = () => {
   const { expandedActiveCaCard } = useCaStore();
@@ -13,12 +16,18 @@ const CashInAndOut = () => {
   const { fetchTransaction, isFetchingTransaction, transactionList } =
     useTransactionStore();
 
+  const inAndOutQueryCondition = query(
+    platformTransactionColRef(activePlatformId),
+    where('caId', '==', expandedActiveCaCard),
+    orderBy('createdAt', 'desc')
+  );
+
   useEffect(() => {
-    fetchTransaction(activePlatformId, expandedActiveCaCard);
+    fetchTransaction(inAndOutQueryCondition, 'CASHIN&OUT');
   }, []);
 
   if (isFetchingTransaction && transactionList.length === 0) {
-    return <Text>⚽💎⚽💎⚽💎</Text>;
+    return <LoadingIndication title={'Loading Transaction !!!'} />;
   }
 
   if (transactionList.length === 0) {
@@ -27,6 +36,14 @@ const CashInAndOut = () => {
 
   return (
     <FlashList
+      refreshing={isFetchingTransaction}
+      refreshControl={
+        <RefreshControl
+          onRefresh={() => {
+            fetchTransaction(inAndOutQueryCondition, 'CASHIN&OUT');
+          }}
+        />
+      }
       estimatedItemSize={50}
       data={transactionList}
       renderItem={({ item }) => {

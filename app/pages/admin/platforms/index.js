@@ -5,6 +5,7 @@ import PlatformCard from '@components/common/cards/admin/PlatformCard';
 import { useRouter } from 'expo-router';
 import usePlatformsStore from '@store/usePlatformsStore';
 import { useEffect } from 'react';
+import LoadingIndication from '@components/common/Loading';
 
 const PlatformPage = () => {
   return (
@@ -44,7 +45,7 @@ PlatformPage.DataDisplay = () => {
   }, []);
 
   if (isFetchingPlatforms && platformsList.length === 0) {
-    return <Text>✔✔💲💲🈯💹❇✳❎✅</Text>;
+    return <LoadingIndication title={'Loading Platforms List !!!'} />;
   }
   if (platformsList.length === 0) {
     return <Text>No Platforms...</Text>;

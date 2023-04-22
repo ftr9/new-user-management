@@ -16,11 +16,17 @@ import useCaStore from '@store/useCaStore';
 import { db } from '@config/firebase';
 import { platformDocRef, cashAppDocRef } from '@config/firebaseRefs';
 import { useRouter } from 'expo-router';
+import LoadingIndication from '@components/common/Loading';
 
 const AddPlatform = () => {
   const router = useRouter();
-  const { fetchAllPlatforms, allPlatformsList, isFetchingPlatforms } =
-    usePlatformsStore();
+  const {
+    fetchAllPlatforms,
+    allPlatformsList,
+    isFetchingPlatforms,
+    platformListIds,
+    setPlatformsListIds,
+  } = usePlatformsStore();
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
   const { expandedActiveCaCard } = useCaStore();
 
@@ -57,7 +63,9 @@ const AddPlatform = () => {
       platforms: arrayUnion(...selectedPlatforms),
     });
 
-    alert('updated successfully...');
+    ////3> update the platformList IDS
+    setPlatformsListIds([...platformListIds, ...selectedPlatforms]);
+    alert('Added Platforms successfully !!!');
     router.back();
   };
 
@@ -65,7 +73,7 @@ const AddPlatform = () => {
     fetchAllPlatforms();
   }, []);
   if (isFetchingPlatforms && allPlatformsList.length === 0) {
-    return <Text>🎈🎆🎇🧨✨🎉🎊🎃</Text>;
+    return <LoadingIndication title={'Loading Platform List !!!'} />;
   }
   return (
     <>

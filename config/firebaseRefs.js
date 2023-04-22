@@ -19,3 +19,8 @@ export const platformDocRef = documentId => doc(db, 'platforms', documentId);
 export const platformTransactionColRef = platformId => {
   return collection(doc(db, 'platforms', platformId), 'transactions');
 };
+
+////transaction document
+export const platformTransactionDocRef = (platformId, transactionId) => {
+  return doc(db, 'platforms', platformId, 'transactions', transactionId);
+};

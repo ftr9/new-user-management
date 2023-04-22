@@ -9,6 +9,7 @@ import useUserData from '@store/useUserData';
 import useCaStore from '@store/useCaStore';
 import { useEffect } from 'react';
 import usePlatformsStore from '@store/usePlatformsStore';
+import LoadingIndication from '@components/common/Loading';
 
 const SubadminDashBoard = () => {
   return (
@@ -32,32 +33,41 @@ SubadminDashBoard.ListHeader = () => {
 };
 
 const Datas = () => {
-  const [isRefreshing, setRefreshing] = useState(false);
   const { fetchSubadminCa, isFetchingCa, caList } = useCaStore();
-  const { setPlatformsListIds, fetchPlatforms } = usePlatformsStore();
+  const { setPlatformsListIds, fetchPlatforms, isFetchingPlatforms } =
+    usePlatformsStore();
   const { user } = useUserData();
+
+  const platformsIds = [...new Set(Object.values(user.data.balances).flat())];
 
   useEffect(() => {
     fetchSubadminCa(Object.keys(user.data.balances));
-    setPlatformsListIds([...new Set(Object.values(user.data.balances).flat())]);
+    setPlatformsListIds(platformsIds);
     fetchPlatforms();
   }, []);
+
+  if (platformsIds.length === 0) {
+    return <Text>You are not added to any platforms....</Text>;
+  }
+
+  if (isFetchingPlatforms) {
+    return <LoadingIndication title={'Loading your platforms !!!'} />;
+  }
 
   return (
     <ScrollView
       refreshControl={
         <RefreshControl
-          refreshing={isRefreshing}
+          refreshing={isFetchingPlatforms}
           onRefresh={() => {
-            setRefreshing(true);
-            setTimeout(() => {
-              setRefreshing(false);
-            }, 1000);
+            fetchSubadminCa(Object.keys(user.data.balances));
+            setPlatformsListIds(platformsIds);
+            fetchPlatforms();
           }}
         />
       }
     >
-      {caList.map(data => {
+      {caList?.map(data => {
         return (
           <CaAndPlatformCard
             key={data.id}

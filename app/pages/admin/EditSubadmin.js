@@ -1,5 +1,4 @@
-import { View, Text } from 'react-native';
-import React from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 import DashBoardHeader from '@components/common/header/DashBoardHeader';
 import DataDisplayContainer from '@components/common/display/DataDisplayContainer';
 import { P2 } from '@components/common/typography/text';
@@ -7,19 +6,15 @@ import FormsPopup from '@components/common/popup/FormPopUp';
 import { FlashList } from '@shopify/flash-list';
 import { useState } from 'react';
 import { useEffect } from 'react';
-import {
-  deleteDoc,
-  getDocs,
-  orderBy,
-  query,
-  updateDoc,
-} from 'firebase/firestore';
+import { deleteDoc, updateDoc } from 'firebase/firestore';
 import { subAdminColRef, subAdminDocRef } from '@config/firebaseRefs';
 import NormalButton from '@components/common/buttons/cta/NormalButton';
-import { tertiaryColor } from '@constants/color';
+import { primaryColor, tertiaryColor } from '@constants/color';
 import BackButton from '@components/common/buttons/cta/BackButton';
 import { H6 } from '@components/common/typography/heading';
 import useSubadminsStore from '@store/subadmin/useSubadminsStore';
+import AreYouSure from '@components/common/popup/AreYouSure';
+import LoadingIndication from '@components/common/Loading';
 
 const EditSubadmin = () => {
   const { isFetchingSubadminsData, subadminsList, fetchAllSubadmins } =
@@ -35,7 +30,7 @@ const EditSubadmin = () => {
       <DataDisplayContainer>
         <EditSubadmin.Header />
         {isFetchingSubadminsData && subadminsList.length === 0 ? (
-          <Text>⛏⛏⛏🔨🔨🔨🔐🔑 LOADING !!!!!!</Text>
+          <LoadingIndication title={'Loading Subadmins List !!!'} />
         ) : (
           <FlashList
             keyboardShouldPersistTaps="handled"
@@ -68,13 +63,13 @@ EditSubadmin.Header = () => {
 };
 
 EditSubadmin.Card = props => {
-  const [isDeleting, setDeleteStatus] = useState();
-  const deleteBtnHandle = async () => {
-    setDeleteStatus(true);
+  const deleteBtnHandle = async ctx => {
+    const { setSubmitStatus } = ctx;
     const { fetchSubadmins, id, username } = props;
+    setSubmitStatus(true);
     await deleteDoc(subAdminDocRef(id));
-    alert(`deleted subadmin ${username} successfully !!`);
-    setDeleteStatus(false);
+    alert(`deleted subadmin ${username} successfully.`);
+    setSubmitStatus(false);
     fetchSubadmins();
   };
 
@@ -83,13 +78,13 @@ EditSubadmin.Card = props => {
       <View className="flex-row justify-between items-center">
         <P2 color={'text-quaternary'}>{props?.username}</P2>
         <View className="w-[30%]">
-          <NormalButton
-            onClick={deleteBtnHandle}
-            title={'Delete'}
-            size={'small'}
-            color={tertiaryColor}
-            isLoading={isDeleting}
-          />
+          <AreYouSure>
+            <AreYouSure.CtaNormalBtn title={'Delete'} />
+            <AreYouSure.BottomSheet
+              title={`Are you sure want to delete ${props?.username} ?`}
+              onYesPress={deleteBtnHandle}
+            ></AreYouSure.BottomSheet>
+          </AreYouSure>
         </View>
       </View>
 

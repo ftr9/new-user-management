@@ -7,6 +7,12 @@ import NormalStaticButton from '@components/common/buttons/static/NormalStaticBt
 import { primaryColor, secondaryColor, tertiaryColor } from '@constants/color';
 import { Icon } from '@rneui/themed';
 import { P4 } from '@components/common/typography/text';
+import { useEffect } from 'react';
+import { useState } from 'react';
+import { onSnapshot } from 'firebase/firestore';
+import { platformDocRef } from '@config/firebaseRefs';
+import usePlatformsStore from '@store/usePlatformsStore';
+import useCaStore from '@store/useCaStore';
 
 const tabBarCommonOptions = {
   headerShown: false,
@@ -140,11 +146,36 @@ const TransactionLayout = () => {
 };
 
 TransactionLayout.Header = () => {
+  const [data, setData] = useState({ name: '', amount: 0 });
+  const { activePlatformId } = usePlatformsStore();
+  const { expandedActiveCaCard } = useCaStore();
+
+  useEffect(() => {
+    const unSubscribePlatformData = onSnapshot(
+      platformDocRef(activePlatformId),
+      snapshot => {
+        const updatedData = {
+          name: snapshot?.data()?.name,
+          amount:
+            snapshot?.data()?.balances[expandedActiveCaCard]?.totalBalance,
+        };
+
+        setData(updatedData);
+      }
+    );
+    return () => {
+      unSubscribePlatformData();
+    };
+  }, []);
+
   return (
     <ListDisplayHeader>
-      <ListDisplayHeader.LeftContent title={'IronMan(transactions)'} />
+      <ListDisplayHeader.LeftContent title={data.name} />
       <ListDisplayHeader.RightContent>
-        <NormalStaticButton style={'bg-primary-20'} title={'total = +500'} />
+        <NormalStaticButton
+          style={'bg-primary-20'}
+          title={'$' + data.amount.toFixed(2)}
+        />
       </ListDisplayHeader.RightContent>
     </ListDisplayHeader>
   );

@@ -16,8 +16,10 @@ const CardInfoHeader = ({
 }) => {
   return (
     <View className="w-[100%]  bg-secondary flex-row flex-wrap justify-between items-center">
-      <View className="flex-row">
-        <H6>{title.length > 10 ? title.slice(0, 9) + '..' : title}</H6>
+      <View className="flex-row flex-wrap">
+        <View className="w-[85%] mb-[2.5px]">
+          <H6>{title}</H6>
+        </View>
         {currentPage !== 'subadmin' ? (
           <FormsPopup>
             <FormsPopup.CircularCtaButton />
@@ -74,10 +76,10 @@ const CardInfoHeader = ({
         )}
       </View>
 
-      <View className="flex-row">
+      <View className="flex-row justify-center ">
         <NormalStaticButton
           style={'border-primary border-[0.5px] mr-2'}
-          title={`+${amount === 0 ? '0.0' : amount} ` + ' $'}
+          title={`+${amount === 0 ? '0.0' : amount.toFixed(2)} ` + ' $'}
         />
         <IconStaticButton title={userOrGroupsCount} />
       </View>
