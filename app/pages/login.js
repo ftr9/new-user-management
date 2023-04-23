@@ -18,8 +18,8 @@ const Login = () => {
   const [isLoggingIn, setIsLogging] = useState(false);
   const [isAdminLogin, setAdminLogin] = useState(false);
   const [inputValue, setInputValue] = useState({
-    username: '',
-    password: '',
+    username: 'Smaran',
+    password: 'Smaran',
   });
   const [inputFieldErr, setInputFieldErr] = useState({
     isUsernameError: false,
