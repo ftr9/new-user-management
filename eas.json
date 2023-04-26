@@ -8,8 +8,6 @@
                 "buildType": "apk"
             }
         }
-    },
-    "production": {
-        "autoIncrement": true
     }
+
 }

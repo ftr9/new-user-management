@@ -1,9 +1,11 @@
 {
   "expo": {
+
     "scheme": "acme",
     "web": {
       "bundler": "metro"
     },
+    "version": "0.0.5",
     "name": "usermanagement",
     "slug": "usermanagement",
     "splash": {
