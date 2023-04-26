@@ -6,22 +6,33 @@ import useCaStore from '@store/useCaStore';
 import useTransactionStore from '@store/useTransactionStore';
 import { useEffect } from 'react';
 import LoadingIndication from '@components/common/Loading';
-import { orderBy, query, where } from 'firebase/firestore';
+import { limit, orderBy, query, startAfter, where } from 'firebase/firestore';
 import { platformTransactionColRef } from '@config/firebaseRefs';
 import { FlashList } from '@shopify/flash-list';
 import CashOutCard from '@components/common/cards/CashOutCard';
+import { transactionLimit } from '@constants/transactionSize';
+import NormalButton from '@components/common/buttons/cta/NormalButton';
+import { tertiaryColor } from '@constants/color';
+import LoadMoreContainer from '@components/common/display/LoadMoreContainer';
 
 const Admin = () => {
   const { activePlatformId } = usePlatformsStore();
-  const { fetchTransaction, transactionAdminList, isFetchingTransaction } =
-    useTransactionStore();
+  const {
+    fetchTransaction,
+    transactionAdminList,
+    isFetchingTransaction,
+    lastVisibleTransaction,
+    isPaginatingTransactions,
+    loadMoreTransaction,
+  } = useTransactionStore();
   const { expandedActiveCaCard } = useCaStore();
 
   const adminQueryCondition = query(
     platformTransactionColRef(activePlatformId),
     where('caId', '==', expandedActiveCaCard),
     where('isAdmin', '==', true),
-    orderBy('createdAt', 'desc')
+    orderBy('createdAt', 'desc'),
+    limit(transactionLimit)
   );
   useEffect(() => {
     fetchTransaction(adminQueryCondition, 'ADMIN');
@@ -47,6 +58,32 @@ const Admin = () => {
         return <CashOutCard {...item} />;
       }}
       estimatedItemSize={50}
+      ListFooterComponentStyle={{
+        marginBottom: 10,
+      }}
+      ListFooterComponent={
+        lastVisibleTransaction && (
+          <LoadMoreContainer>
+            <NormalButton
+              isLoading={isPaginatingTransactions}
+              title={'Load More'}
+              color={tertiaryColor}
+              size={'small'}
+              onClick={() => {
+                const adminQueryPaginate = query(
+                  platformTransactionColRef(activePlatformId),
+                  where('caId', '==', expandedActiveCaCard),
+                  where('isAdmin', '==', true),
+                  orderBy('createdAt', 'desc'),
+                  startAfter(lastVisibleTransaction),
+                  limit(transactionLimit)
+                );
+                loadMoreTransaction(adminQueryPaginate, 'ADMIN');
+              }}
+            />
+          </LoadMoreContainer>
+        )
+      }
     />
   );
 };

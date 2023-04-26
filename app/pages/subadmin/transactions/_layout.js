@@ -1,6 +1,7 @@
 import { View, Text } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { Slot, Tabs } from 'expo-router';
+import { Slot, Tabs, useRouter } from 'expo-router';
+import Decimal from 'decimal.js';
 
 import { primaryColor, secondaryColor, tertiaryColor } from '@constants/color';
 import { Icon } from '@rneui/themed';
@@ -22,7 +23,11 @@ import {
   increment,
   serverTimestamp,
   onSnapshot,
+  where,
   runTransaction,
+  query,
+  limit,
+  orderBy,
   doc,
 } from 'firebase/firestore';
 import {
@@ -189,8 +194,9 @@ TransactionLayout.ListDisplayHeader = () => {
       snapshot => {
         const updatedData = {
           name: snapshot?.data()?.name,
-          amount:
-            snapshot?.data()?.balances[expandedActiveCaCard]?.totalBalance,
+          amount: new Decimal(
+            snapshot?.data()?.balances[expandedActiveCaCard]?.totalBalance
+          ).toFixed(2),
         };
 
         setData(updatedData);
@@ -218,6 +224,8 @@ TransactionLayout.CashInAndOut = () => {
   const { user } = useUserData();
   const { expandedActiveCaCard } = useCaStore();
   const { activePlatformId: id } = usePlatformsStore();
+  const { fetchTransaction } = useTransactionStore();
+  const router = useRouter();
 
   const onCashInClick = async context => {
     const {
@@ -230,8 +238,9 @@ TransactionLayout.CashInAndOut = () => {
     } = context;
     const value = parseFloat(inputValue);
     if (value <= 0 || isNaN(value)) {
-      setError('* balance should be more than zero');
+      setError('* Balance should be more than zero');
       setErrorStatus(true);
+      return;
     }
 
     setSubmitStatus(true);
@@ -267,10 +276,20 @@ TransactionLayout.CashInAndOut = () => {
       totalBalance: increment(value),
     });
 
-    alert(`Recharged ${value}$ successfully`);
+    alert(`Recharged ${value}$ successfully.`);
     resetFormsState();
 
     ////6)fetch again everything
+    fetchTransaction(
+      query(
+        platformTransactionColRef(id),
+        where('isDeleted', '==', false),
+        where('caId', '==', expandedActiveCaCard),
+        orderBy('createdAt', 'desc'),
+        limit(20)
+      ),
+      'CASHIN&OUT'
+    );
   };
 
   const onCashOutClick = async context => {
@@ -284,7 +303,7 @@ TransactionLayout.CashInAndOut = () => {
     } = context;
     const value = parseFloat(inputValue);
     if (value <= 0 || isNaN(value)) {
-      setError('* balance should be more than zero');
+      setError('* Balance should be more than zero.');
       setErrorStatus(true);
       return;
     }
@@ -297,17 +316,17 @@ TransactionLayout.CashInAndOut = () => {
         if (!platform.exists()) {
           alert('failed to recharge !! something went wrong');
           setSubmitStatus(false);
-          return;
+          throw new Error('something went wrong');
         }
 
         const platformBalance =
           platform.data().balances[expandedActiveCaCard].totalBalance;
 
         if (platformBalance < inputValue) {
-          setError('* Insufficient Balance');
+          setError('* Insufficient Balance.');
           setErrorStatus(true);
           setSubmitStatus(false);
-          return;
+          throw new Error('something went wrong..');
         }
 
         const newTransactionRef = doc(platformTransactionColRef(id));
@@ -327,22 +346,33 @@ TransactionLayout.CashInAndOut = () => {
         });
 
         ////4) Add to the total Balance of platforms
-        await transaction.update(platformDocRef(id), {
+        transaction.update(platformDocRef(id), {
           [`balances.${expandedActiveCaCard}.totalBalance`]: increment(
             -1 * value
           ),
         });
 
         ////5) Add to the total Balance of CA
-        await transaction.update(cashAppDocRef(expandedActiveCaCard), {
+        transaction.update(cashAppDocRef(expandedActiveCaCard), {
           totalBalance: increment(-1 * value),
         });
-
-        alert(`Recharged ${value}$ successfully`);
-        resetFormsState();
+        //alert('time to fetch new Data');
       });
+      alert(`Redeemed ${value}$ successfully.`);
+      resetFormsState();
+      fetchTransaction(
+        query(
+          platformTransactionColRef(id),
+          where('isDeleted', '==', false),
+          where('caId', '==', expandedActiveCaCard),
+          orderBy('createdAt', 'desc'),
+          limit(30)
+        ),
+        'CASHIN&OUT'
+      );
     } catch (err) {
-      alert('sometring went wrong please try again ...');
+      console.log('snap..');
+      //alert('Something went wrong.');
     }
 
     ////6)fetch again everything
@@ -357,10 +387,10 @@ TransactionLayout.CashInAndOut = () => {
             <FormsPopup.Header title={'Recharge'} />
             <FormsPopup.FormsNumericInputField
               label={'Enter the recharge Amount'}
-              placeholder={''}
+              placeholder={'Recharge Amount'}
             />
             <FormsPopup.FormsTextInputField1
-              label={'Enter the remarks (optional)'}
+              label={'Enter the remarks (*optional)'}
               placeholder={'Remarks'}
             />
             <FormsPopup.FormsSubmitButton submitClickHandle={onCashInClick}>
@@ -382,10 +412,10 @@ TransactionLayout.CashInAndOut = () => {
             <FormsPopup.Header title={'Redeem'} />
             <FormsPopup.FormsNumericInputField
               label={'Enter the redeem amount'}
-              placeholder={''}
+              placeholder={'Redeem Amount'}
             />
             <FormsPopup.FormsTextInputField1
-              label={'Enter remarks (optional)'}
+              label={'Enter remarks (*optional)'}
               placeholder={'Remarks'}
             />
             <FormsPopup.FormsSubmitButton

@@ -24,6 +24,7 @@ const RemoveSubadmin = () => {
   const { expandedActiveCaCard } = useCaStore();
   const { platformId } = useSearchParams();
   const [selectedSubadmins, setSelectedSubadmins] = useState([]);
+  const [isDeletingSubadmins, setDeleteSubadminStatus] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -51,6 +52,7 @@ const RemoveSubadmin = () => {
       alert('please select atleast one subadmin');
       return;
     }
+    setDeleteSubadminStatus(true);
     const batch = writeBatch(db);
 
     selectedSubadmins.forEach(subadminId => {
@@ -67,7 +69,8 @@ const RemoveSubadmin = () => {
       ),
     });
 
-    alert('removed subadmin successfully');
+    setDeleteSubadminStatus(false);
+    alert('Removed subadmin successfully.');
     router.back();
   };
 
@@ -94,6 +97,7 @@ const RemoveSubadmin = () => {
       </FlashList>
       <View className="my-3">
         <NormalButton
+          isLoading={isDeletingSubadmins}
           onClick={onRemoveClick}
           title={'Remove Subadmin'}
           color={tertiaryColor}

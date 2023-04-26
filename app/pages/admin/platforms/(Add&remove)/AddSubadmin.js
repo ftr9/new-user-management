@@ -72,7 +72,7 @@ const AddSubadmin = () => {
     });
 
     setAddingStatus(false);
-    alert('added subadmin successfully');
+    alert('Added subadmin successfully.');
     router.back();
   };
 

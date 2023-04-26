@@ -6,6 +6,7 @@ import { P3 } from '@components/common/typography/text';
 import { useRouter } from 'expo-router';
 import usePlatformsStore from '@store/usePlatformsStore';
 import useCaStore from '@store/useCaStore';
+import Decimal from 'decimal.js';
 
 const CaAndPlatformCard = ({ cashApp, platforms }) => {
   const { platformsList, setActivePlatformId } = usePlatformsStore();
@@ -42,7 +43,9 @@ const CaAndPlatformCard = ({ cashApp, platforms }) => {
               <CaAndPlatformCard.AmountDisplayBtn
                 amount={
                   platformData?.balances[cashApp.id]
-                    ? platformData?.balances[cashApp.id].totalBalance
+                    ? new Decimal(
+                        platformData?.balances[cashApp.id].totalBalance
+                      ).toFixed(2)
                     : '--'
                 }
               />
@@ -57,7 +60,7 @@ const CaAndPlatformCard = ({ cashApp, platforms }) => {
 CaAndPlatformCard.AmountDisplayBtn = ({ amount }) => {
   return (
     <View className="bg-tertiary-20 flex-1 rounded-sm  justify-center items-center">
-      <P3 color={'text-tertiary'}>{amount}</P3>
+      <P3 color={'text-tertiary'}>${amount}</P3>
     </View>
   );
 };

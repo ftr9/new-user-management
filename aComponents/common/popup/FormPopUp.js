@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, LogBox } from 'react-native';
 import { BottomSheet, Avatar } from '@rneui/themed';
 import { H6 } from '../typography/heading';
 import InputField from '../Input';
@@ -9,6 +9,9 @@ import { primaryColor } from '@constants/color';
 
 /**This starts here finaly.......✨🧨🎉✨✨🧨🎉🎉 */
 
+LogBox.ignoreLogs([
+  " @firebase/firestore: Firestore (9.19.1): RestConnection RPC 'Commit'",
+]);
 const FormsPopupContext = createContext();
 
 export const FormsPopup = ({ children }) => {
@@ -60,10 +63,10 @@ export const FormsPopup = ({ children }) => {
 };
 
 function BottomsSheet({ children }) {
-  const { isPopupVisible, setPopupVisible } = useContext(FormsPopupContext);
+  const { isPopupVisible, resetFormsState } = useContext(FormsPopupContext);
 
   const backDropPressHandle = () => {
-    setPopupVisible(false);
+    resetFormsState();
   };
   return (
     <BottomSheet
@@ -124,7 +127,7 @@ FormsPopup.CircularCtaButton = () => {
 };
 
 const FormsPopUpHeader = ({ title }) => {
-  const { setPopupVisible } = useContext(FormsPopupContext);
+  const { setPopupVisible, resetFormsState } = useContext(FormsPopupContext);
   return (
     <View className="flex-row justify-between items-center p-3 ">
       <H6>{title}</H6>
@@ -135,7 +138,7 @@ const FormsPopUpHeader = ({ title }) => {
         containerStyle={{
           backgroundColor: '#E03131',
         }}
-        onPress={() => setPopupVisible(false)}
+        onPress={() => resetFormsState()}
       ></Avatar>
     </View>
   );

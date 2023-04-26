@@ -1,0 +1,67 @@
+[{
+    "amount": 5,
+    "caId": "HBYzv6p5VJNIr2ydSm4s",
+    "closingAmount": 218,
+    "createdAt": 2023 - 04 - 23 T04: 20: 16.453 Z,
+    "id": "f4YOggwG3WgdJRfFeVxR",
+    "isAdmin": false,
+    "isCashIn": true,
+    "isDeleted": false,
+    "userId": "g4TwdeH9VMnH9FT84Ges",
+    "userName": "Smaran (XXXX)"
+}, {
+    "amount": 5,
+    "caId": "HBYzv6p5VJNIr2ydSm4s",
+    "closingAmount": 213,
+    "createdAt": 2023 - 04 - 23 T04: 18: 35.541 Z,
+    "id": "qQxHOhnKoWnbOXH4k51e",
+    "isAdmin": false,
+    "isCashIn": true,
+    "isDeleted": false,
+    "userId": "g4TwdeH9VMnH9FT84Ges",
+    "userName": "Smaran (XXXX)"
+}, {
+    "amount": 10,
+    "caId": "HBYzv6p5VJNIr2ydSm4s",
+    "closingAmount": 208,
+    "createdAt": 2023 - 04 - 23 T04: 16: 57.605 Z,
+    "id": "SfeqpoXhTi7PnSEx1iB1",
+    "isAdmin": false,
+    "isCashIn": true,
+    "isDeleted": false,
+    "userId": "g4TwdeH9VMnH9FT84Ges",
+    "userName": "Smaran (XXXX)"
+}, {
+    "amount": 12,
+    "caId": "HBYzv6p5VJNIr2ydSm4s",
+    "closingAmount": 198,
+    "createdAt": 2023 - 04 - 23 T04: 16: 47.108 Z,
+    "id": "4u41GlVuReInpU2JBjJy",
+    "isAdmin": false,
+    "isCashIn": true,
+    "isDeleted": false,
+    "userId": "g4TwdeH9VMnH9FT84Ges",
+    "userName": "Smaran (XXXX)"
+}, {
+    "amount": 5,
+    "caId": "HBYzv6p5VJNIr2ydSm4s",
+    "closingAmount": 186,
+    "createdAt": 2023 - 04 - 23 T04: 16: 27.893 Z,
+    "id": "DgHVvjhpib9TF6a8u1yv",
+    "isAdmin": false,
+    "isCashIn": true,
+    "isDeleted": false,
+    "userId": "g4TwdeH9VMnH9FT84Ges",
+    "userName": "Smaran (XXXX)"
+}, {
+    "amount": 200,
+    "caId": "HBYzv6p5VJNIr2ydSm4s",
+    "closingAmount": 200,
+    "createdAt": 2023 - 04 - 21 T11: 18: 38.252 Z,
+    "id": "vTcU8R4Vahsomm4lqENI",
+    "isAdmin": true,
+    "isCashIn": true,
+    "isDeleted": false,
+    "userId": "5MgX6ye4ihrHcvqCvPmB",
+    "userName": "Admin(XXXX)"
+}]

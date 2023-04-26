@@ -107,7 +107,7 @@ const DeleteTransaction = () => {
               <AreYouSure.BottomSheet
                 title={'Delete Transaction'}
                 onYesPress={async context => {
-                  const { setSubmitStatus } = context;
+                  const { setSubmitStatus, setPopupVisible } = context;
                   setSubmitStatus(true);
                   try {
                     await runTransaction(db, async transaction => {
@@ -115,6 +115,17 @@ const DeleteTransaction = () => {
                         throw new Error('the transaction is already deleted');
                       }
                       if (singleTransaction.isCashIn) {
+                        const transactionDoc = await transaction.get(
+                          platformDocRef(activePlatformId)
+                        );
+
+                        if (
+                          transactionDoc.data()?.balances[expandedActiveCaCard]
+                            .totalBalance < singleTransaction.amount
+                        ) {
+                          throw new Error('Balance Insufficient.');
+                        }
+
                         ////1) minus the balance of CAsh app
                         transaction.update(
                           cashAppDocRef(expandedActiveCaCard),
@@ -171,11 +182,12 @@ const DeleteTransaction = () => {
                       }
                       setSubmitStatus(false);
                       alert('Deleted Transaction Successfully.');
-                      router.back();
                     });
+                    router.back();
                   } catch (e) {
-                    alert('failed try again !!!');
+                    alert(e.message);
                     setSubmitStatus(false);
+                    setPopupVisible(false);
                   }
                 }}
               ></AreYouSure.BottomSheet>

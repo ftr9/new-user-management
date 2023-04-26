@@ -24,3 +24,8 @@ export const platformTransactionColRef = platformId => {
 export const platformTransactionDocRef = (platformId, transactionId) => {
   return doc(db, 'platforms', platformId, 'transactions', transactionId);
 };
+
+/////App version Document
+export const appVersionDocRef = () => {
+  return doc(db, 'appVersion', '9828041958um');
+};

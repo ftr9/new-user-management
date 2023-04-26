@@ -6,8 +6,17 @@ import FormsPopup from '@components/common/popup/FormPopUp';
 import { FlashList } from '@shopify/flash-list';
 import { useState } from 'react';
 import { useEffect } from 'react';
-import { deleteDoc, updateDoc } from 'firebase/firestore';
-import { subAdminColRef, subAdminDocRef } from '@config/firebaseRefs';
+import {
+  deleteDoc,
+  increment,
+  updateDoc,
+  writeBatch,
+} from 'firebase/firestore';
+import {
+  platformDocRef,
+  subAdminColRef,
+  subAdminDocRef,
+} from '@config/firebaseRefs';
 import NormalButton from '@components/common/buttons/cta/NormalButton';
 import { primaryColor, tertiaryColor } from '@constants/color';
 import BackButton from '@components/common/buttons/cta/BackButton';
@@ -15,6 +24,7 @@ import { H6 } from '@components/common/typography/heading';
 import useSubadminsStore from '@store/subadmin/useSubadminsStore';
 import AreYouSure from '@components/common/popup/AreYouSure';
 import LoadingIndication from '@components/common/Loading';
+import { db } from '@config/firebase';
 
 const EditSubadmin = () => {
   const { isFetchingSubadminsData, subadminsList, fetchAllSubadmins } =
@@ -65,10 +75,27 @@ EditSubadmin.Header = () => {
 EditSubadmin.Card = props => {
   const deleteBtnHandle = async ctx => {
     const { setSubmitStatus } = ctx;
-    const { fetchSubadmins, id, username } = props;
+    const { fetchSubadmins, id, username, balances } = props;
+
     setSubmitStatus(true);
+    const subadminsPlatform = Object.values(balances).flat();
+    if (subadminsPlatform.length !== 0) {
+      const subadminsCashApps = Object.keys(balances);
+      const batch = writeBatch(db);
+      subadminsCashApps.forEach(caId => {
+        if (balances[caId].length !== 0) {
+          balances[caId].forEach(platformId => {
+            batch.update(platformDocRef(platformId), {
+              [`balances.${caId}.totalSubadmins`]: increment(-1),
+            });
+          });
+        }
+      });
+      await batch.commit();
+    }
+
     await deleteDoc(subAdminDocRef(id));
-    alert(`deleted subadmin ${username} successfully.`);
+    alert(`Deleted subadmin (${username}).`);
     setSubmitStatus(false);
     fetchSubadmins();
   };
@@ -120,7 +147,7 @@ EditSubadmin.Card = props => {
                   password: inputValue,
                 });
                 resetFormsState();
-                alert('updated password successfully !!!');
+                alert('Password updated.');
               }}
             >
               Set

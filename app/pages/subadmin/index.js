@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import React, { useState } from 'react';
 import DashBoardHeader from '@components/common/header/DashBoardHeader';
 import DataDisplayContainer from '@components/common/display/DataDisplayContainer';
@@ -63,7 +63,7 @@ const Datas = () => {
   }
 
   return (
-    <ScrollView
+    <FlatList
       refreshControl={
         <RefreshControl
           refreshing={isFetchingPlatforms}
@@ -74,17 +74,19 @@ const Datas = () => {
           }}
         />
       }
-    >
-      {caList?.map(data => {
-        return (
-          <CaAndPlatformCard
-            key={data.id}
-            cashApp={data}
-            platforms={user.data.balances[data.id]}
-          />
-        );
-      })}
-    </ScrollView>
+      data={caList}
+      renderItem={({ item }) => {
+        if (user?.data?.balances[item.id]?.length !== 0) {
+          return (
+            <CaAndPlatformCard
+              cashApp={item}
+              platforms={user.data.balances[item.id]}
+            />
+          );
+        }
+      }}
+      keyExtractor={(item, _) => item.id}
+    />
   );
 };
 SubadminDashBoard.Datas = Datas;

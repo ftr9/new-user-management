@@ -139,7 +139,7 @@ AdminDashBoard.CreateNewCA = () => {
             await addDoc(cashAppColRef, cashAppData);
 
             ////3. Reset every thing...
-            alert(`created new CA ( ${inputValue} ) successfully.`);
+            alert(`Created CA ( ${inputValue} ) successfully.`);
             setSubmitStatus(false);
             setPopupVisible(false);
             setErrorStatus(true);

@@ -8,7 +8,8 @@ import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SubadminRootLayout = () => {
-  const { user, unSetUser } = useUserData();
+  const { user, unSetUser, setUser } = useUserData();
+
   const router = useRouter();
 
   const logout = async () => {
@@ -35,23 +36,9 @@ const SubadminRootLayout = () => {
           return;
         }
 
-        /*Alert.alert(
-          'Admin Change',
-          'Either your password has been changed or you have been removed from platform',
-          [
-            {
-              text: 'ok',
-              onPress: async () => {
-                ////1) remove from the storage
-                await AsyncStorage.removeItem('@user');
-                ////2) Unset from global user store
-                unSetUser();
-                ////3) go Back TO LOgIn page
-                router.replace('/pages/login');
-              },
-            },
-          ]
-        );*/
+        //alert('Some changes made by admin');
+        setUser({ ...user, data: changeSnapShot.data() });
+        router.replace('/pages/subadmin');
       }
     );
 

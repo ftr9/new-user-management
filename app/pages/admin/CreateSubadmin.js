@@ -73,7 +73,7 @@ const AddSubadmin = () => {
       username: inputValue.username.trim(),
       password: inputValue.password,
     });
-    alert(`created subadmin ${inputValue.username} successfully`);
+    alert(`Created subadmin (${inputValue.username}) successfully.`);
     resetState();
     router.back();
   };

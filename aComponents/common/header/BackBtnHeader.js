@@ -32,7 +32,7 @@ const BackBtnHeader = () => {
   return (
     <View className="flex-row my-2  justify-between items-center">
       <BackBtnHeader.BackBtn />
-      <View className="w-[60%]">
+      <View className="pl-3 w-[60%]">
         <BackBtnHeader.Title>{data.name}</BackBtnHeader.Title>
       </View>
 

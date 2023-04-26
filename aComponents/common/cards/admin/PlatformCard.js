@@ -1,4 +1,4 @@
-import { View, Text, Dimensions } from 'react-native';
+import { View, Text, Dimensions, LogBox } from 'react-native';
 import React from 'react';
 import CardInfoHeader from '../CardInfoHeader';
 import DottedIconButton from '@components/common/buttons/cta/DottedIconButton';
@@ -23,6 +23,8 @@ import {
   updateDoc,
   where,
   writeBatch,
+  runTransaction,
+  doc,
 } from 'firebase/firestore';
 import {
   platformColRef,
@@ -33,6 +35,11 @@ import {
   subAdminDocRef,
 } from '@config/firebaseRefs';
 import { db } from '@config/firebase';
+
+/////Warning hide
+LogBox.ignoreLogs([
+  "@firebase/firestore: Firestore (9.19.1): RestConnection RPC 'Commit'  failed with error: ",
+]);
 
 const PlatformCard = props => {
   const { expandedActiveCaCard } = useCaStore();
@@ -122,11 +129,11 @@ PlatformCard.RechargeBtn = props => {
         <FormsPopup.Header title={'Recharge'} />
         <FormsPopup.FormsNumericInputField
           label={'Enter recharge amount'}
-          placeholder={'recharge amount'}
+          placeholder={'Recharge Amount'}
         />
         <FormsPopup.FormsTextInputField1
-          label={'Enter the remarks (optional)'}
-          placeholder={'remarks'}
+          label={'Enter the remarks (*optional)'}
+          placeholder={'Remarks'}
         />
         <FormsPopup.FormsSubmitButton
           submitClickHandle={async context => {
@@ -140,7 +147,7 @@ PlatformCard.RechargeBtn = props => {
             } = context;
             const value = parseFloat(inputValue);
             if (value <= 0 || isNaN(value)) {
-              setError('* balance should be more than zero');
+              setError('* Balance should be more than zero.');
               setErrorStatus(true);
               return;
             }
@@ -149,7 +156,7 @@ PlatformCard.RechargeBtn = props => {
             ////2) get platform balance
             const platform = await getDoc(platformDocRef(id));
             if (!platform.exists()) {
-              alert('failed to reacharge !! something went wrong');
+              alert('failed to recharge !! something went wrong');
               setSubmitStatus(false);
               return;
             }
@@ -180,7 +187,7 @@ PlatformCard.RechargeBtn = props => {
               totalBalance: increment(value),
             });
 
-            alert(`Recharged ${value}$ successfully`);
+            alert(`Recharged ${value}$ successfully.`);
             resetFormsState();
 
             ////6)fetch again everything
@@ -212,11 +219,11 @@ PlatformCard.SellBalanceBtn = props => {
         <FormsPopup.Header title={'Sell Balance'} />
         <FormsPopup.FormsNumericInputField
           label={'Enter the selling amount'}
-          placeholder={'selling amount'}
+          placeholder={'Selling Amount'}
         />
         <FormsPopup.FormsTextInputField1
-          label={'Enter the remarks(optional)'}
-          placeholder={'remarks'}
+          label={'Enter the remarks (*required)'}
+          placeholder={'Remarks'}
         />
         <FormsPopup.FormsSubmitButton
           submitClickHandle={async context => {
@@ -224,64 +231,77 @@ PlatformCard.SellBalanceBtn = props => {
               inputValue,
               inputValue1,
               setError,
+              setError1,
               setErrorStatus,
+              setErrorStatus1,
               setSubmitStatus,
               resetFormsState,
             } = context;
             const amount = parseFloat(inputValue);
             if (amount < 0 || isNaN(amount)) {
-              setError('* amount should not be negative');
+              setError('* Amount should not be negative.');
               setErrorStatus(true);
+              return;
+            }
+            if (inputValue1.length === 0) {
+              setError1('* Remarks is required');
+              setErrorStatus1(true);
               return;
             }
             setSubmitStatus(true);
+            try {
+              await runTransaction(db, async transaction => {
+                /////1) fetch platform
+                const platformDoc = await transaction.get(platformDocRef(id));
+                if (!platformDoc.exists()) {
+                  alert('something went wrong !!! cannot sell balance');
+                  return;
+                }
 
-            /////1) fetch platform
-            const platformDoc = await getDoc(platformDocRef(id));
-            if (!platformDoc.exists()) {
-              alert('something went wrong !!! cannot sell balance');
-              return;
-            }
+                const platformBalance =
+                  platformDoc.data().balances[expandedActiveCaCard]
+                    .totalBalance;
 
-            const platformBalance =
-              platformDoc.data().balances[expandedActiveCaCard].totalBalance;
-            if (platformBalance < amount) {
-              setError('* Balance Insufficient');
+                if (platformBalance < amount) {
+                  throw Error('* Balance Insufficient');
+                }
+
+                /////2) add to transaction
+                const transactionDoc = doc(platformTransactionColRef(id));
+                transaction.set(transactionDoc, {
+                  amount: -1 * amount,
+                  caId: expandedActiveCaCard,
+                  closingAmount: platformBalance - amount,
+                  createdAt: serverTimestamp(),
+                  isAdmin: true,
+                  isCashIn: false,
+                  isBalanceSold: true,
+                  isDeleted: false,
+                  userId: user.id,
+                  userName: `Admin(${inputValue1 ? inputValue1 : 'XXXX'})`,
+                });
+
+                ////3) update platform Balance
+                transaction.update(platformDocRef(id), {
+                  [`balances.${expandedActiveCaCard}.totalBalance`]: increment(
+                    -1 * amount
+                  ),
+                });
+
+                ////4) update cash App balance
+                transaction.update(cashAppDocRef(expandedActiveCaCard), {
+                  totalBalance: increment(-1 * amount),
+                });
+              });
+              setSubmitStatus(false);
+              resetFormsState();
+              alert(`Sold ${amount}$ successfully`);
+              fetchPlatforms();
+            } catch (err) {
+              setError(err.message);
               setErrorStatus(true);
               setSubmitStatus(false);
-              return;
             }
-
-            /////2) add to transaction
-            addDoc(platformTransactionColRef(id), {
-              amount: -1 * amount,
-              caId: expandedActiveCaCard,
-              closingAmount: platformBalance - amount,
-              createdAt: serverTimestamp(),
-              isAdmin: true,
-              isCashIn: false,
-              isBalanceSold: true,
-              isDeleted: false,
-              userId: user.id,
-              userName: `Admin(${inputValue1 ? inputValue1 : 'XXXX'})`,
-            });
-
-            ////3) update platform Balance
-            await updateDoc(platformDocRef(id), {
-              [`balances.${expandedActiveCaCard}.totalBalance`]: increment(
-                -1 * amount
-              ),
-            });
-
-            ////4) update cash App balance
-            await updateDoc(cashAppDocRef(expandedActiveCaCard), {
-              totalBalance: increment(-1 * amount),
-            });
-
-            setSubmitStatus(false);
-            resetFormsState();
-            alert(`sold balance ${amount} successfully`);
-            fetchPlatforms();
           }}
         >
           Sell Balance
@@ -309,11 +329,11 @@ PlatformCard.RedeemBtn = props => {
         <FormsPopup.Header title={'Redeem Balance'} />
         <FormsPopup.FormsNumericInputField
           label={'Enter the redeem amount'}
-          placeholder={'redeem amount'}
+          placeholder={'Redeem Amount'}
         />
         <FormsPopup.FormsTextInputField1
-          label={'Enter the remarks'}
-          placeholder={'remarks'}
+          label={'Enter the remarks (*optional)'}
+          placeholder={'Remarks'}
         />
         <FormsPopup.FormsSubmitButton
           submitClickHandle={async context => {
@@ -346,7 +366,7 @@ PlatformCard.RedeemBtn = props => {
               userId: user.id,
               userName: `Admin ${inputValue1 ? inputValue1 : 'XXXX'}`,
             });
-            alert(`redeemed ${amount} successfully.`);
+            alert(`Redeemed ${amount}$ successfully.`);
             resetFormsState();
           }}
         >

@@ -5,7 +5,12 @@ import useTransactionStore from '@store/useTransactionStore';
 
 import { useRouter, useSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { getDoc, increment, updateDoc } from 'firebase/firestore';
+import {
+  getDoc,
+  increment,
+  runTransaction,
+  updateDoc,
+} from 'firebase/firestore';
 import { H3, H4 } from '@components/common/typography/heading';
 import usePlatformsStore from '@store/usePlatformsStore';
 import LoadingIndication from '@components/common/Loading';
@@ -20,6 +25,7 @@ import {
   platformTransactionDocRef,
 } from '@config/firebaseRefs';
 import AreYouSure from '@components/common/popup/AreYouSure';
+import { db } from '@config/firebase';
 
 const DeleteTransaction = () => {
   const { TransactionId } = useSearchParams();
@@ -99,56 +105,80 @@ const DeleteTransaction = () => {
               onYesPress={async context => {
                 const { setSubmitStatus } = context;
                 setSubmitStatus(true);
-                if (singleTransaction.isCashIn) {
-                  ////1) minus the balance of CAsh app
-                  await updateDoc(cashAppDocRef(expandedActiveCaCard), {
-                    totalBalance: increment(-1 * singleTransaction.amount),
-                  });
+                try {
+                  await runTransaction(db, async transaction => {
+                    if (singleTransaction.isCashIn) {
+                      const platform = await transaction.get(
+                        platformDocRef(activePlatformId)
+                      );
 
-                  ////2) minus the balance of platform
-                  await updateDoc(platformDocRef(activePlatformId), {
-                    [`balances.${expandedActiveCaCard}.totalBalance`]:
-                      increment(-1 * singleTransaction.amount),
-                  });
+                      if (
+                        platform.data()?.balances[expandedActiveCaCard]
+                          ?.totalBalance < singleTransaction.amount
+                      ) {
+                        throw new Error('Balance Insufficient.');
+                      }
 
-                  /////3) update the transaction isDeleted to true;
-                  await updateDoc(
-                    platformTransactionDocRef(activePlatformId, TransactionId),
-                    {
-                      isDeleted: true,
+                      ////1) minus the balance of CAsh app
+                      transaction.update(cashAppDocRef(expandedActiveCaCard), {
+                        totalBalance: increment(-1 * singleTransaction.amount),
+                      });
+
+                      ////2) minus the balance of platform
+                      transaction.update(platformDocRef(activePlatformId), {
+                        [`balances.${expandedActiveCaCard}.totalBalance`]:
+                          increment(-1 * singleTransaction.amount),
+                      });
+
+                      /////3) update the transaction isDeleted to true;
+                      transaction.update(
+                        platformTransactionDocRef(
+                          activePlatformId,
+                          TransactionId
+                        ),
+                        {
+                          isDeleted: true,
+                        }
+                      );
+                    } else {
+                      ////1) minus the balance of CAsh app
+                      transaction.update(cashAppDocRef(expandedActiveCaCard), {
+                        totalBalance: increment(
+                          singleTransaction?.isBalanceSold
+                            ? Math.abs(singleTransaction.amount)
+                            : 0
+                        ),
+                      });
+
+                      ////2) minus the balance of platform
+                      transaction.update(platformDocRef(activePlatformId), {
+                        [`balances.${expandedActiveCaCard}.totalBalance`]:
+                          increment(
+                            singleTransaction?.isBalanceSold
+                              ? Math.abs(singleTransaction.amount)
+                              : 0
+                          ),
+                      });
+
+                      /////3) update the transaction isDeleted to true;
+                      transaction.update(
+                        platformTransactionDocRef(
+                          activePlatformId,
+                          TransactionId
+                        ),
+                        {
+                          isDeleted: true,
+                        }
+                      );
                     }
-                  );
-                } else {
-                  ////1) minus the balance of CAsh app
-                  await updateDoc(cashAppDocRef(expandedActiveCaCard), {
-                    totalBalance: increment(
-                      singleTransaction?.isBalanceSold
-                        ? Math.abs(singleTransaction.amount)
-                        : 0
-                    ),
                   });
-
-                  ////2) minus the balance of platform
-                  await updateDoc(platformDocRef(activePlatformId), {
-                    [`balances.${expandedActiveCaCard}.totalBalance`]:
-                      increment(
-                        singleTransaction?.isBalanceSold
-                          ? Math.abs(singleTransaction.amount)
-                          : 0
-                      ),
-                  });
-
-                  /////3) update the transaction isDeleted to true;
-                  await updateDoc(
-                    platformTransactionDocRef(activePlatformId, TransactionId),
-                    {
-                      isDeleted: true,
-                    }
-                  );
+                  setSubmitStatus(false);
+                  alert('Deleted Transaction Successfully.');
+                  router.back();
+                } catch (err) {
+                  alert(err.message);
+                  setSubmitStatus(false);
                 }
-                setSubmitStatus(false);
-                alert('Deleted Transaction Successfully.');
-                router.back();
               }}
             ></AreYouSure.BottomSheet>
           </AreYouSure>
