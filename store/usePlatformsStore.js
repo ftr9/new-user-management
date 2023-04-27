@@ -35,7 +35,10 @@ const usePlatformsStore = create(
         ////2) get data from firestore
         const { platformListIds: platformIds } = get();
         const datas = await getDocs(
-          query(platformColRef, where(documentId(), 'in', platformIds))
+          query(
+            platformColRef,
+            where(documentId(), 'in', platformIds.slice(0, 10))
+          )
         );
         const fetchedPlatforms = [];
         datas.forEach(platformDoc => {
@@ -44,6 +47,20 @@ const usePlatformsStore = create(
             id: platformDoc.id,
           });
         });
+        ////check if there is more than 10 datas
+        if (platformIds.length > 10) {
+          const moreDatas = await getDocs(
+            documentId(),
+            'in',
+            platformIds.slice(10, 20)
+          );
+          moreDatas.forEach(platformDoc => {
+            fetchedPlatforms.push({
+              ...platformDoc.data(),
+              id: platformDoc.id,
+            });
+          });
+        }
 
         set(state => ({
           ...state,

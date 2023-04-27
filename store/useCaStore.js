@@ -51,13 +51,32 @@ const useCaStore = create(
           state.isFetchingCa = true;
           caList = [];
         });
+
         const datas = await getDocs(
-          query(cashAppColRef, where(documentId(), 'in', caIds))
+          query(cashAppColRef, where(documentId(), 'in', caIds.slice(0, 10)))
         );
         const fetchedCashApps = [];
         datas.forEach(caDocs => {
           fetchedCashApps.push({ ...caDocs.data(), id: caDocs.id });
         });
+        ////if caIds is more than 10
+        if (caIds.length > 10) {
+          const moreDatas = await getDocs(
+            query(cashAppColRef, where(documentId(), 'in', caIds.slice(10, 20)))
+          );
+          moreDatas.forEach(caDocs => {
+            fetchedCashApps.push({ ...caDocs.data(), id: caDocs.id });
+          });
+        }
+        ////if caIds is more than 20
+        if (caIds.length > 20) {
+          const moreDatas = await getDocs(
+            query(cashAppColRef, where(documentId(), 'in', caIds.slice(20, 30)))
+          );
+          moreDatas.forEach(caDocs => {
+            fetchedCashApps.push({ ...caDocs.data(), id: caDocs.id });
+          });
+        }
         set(state => ({
           ...state,
           isFetchingCa: false,
