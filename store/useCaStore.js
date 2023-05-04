@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { cashAppColRef, subAdminColRef } from '@config/firebaseRefs';
+import { cashAppColRef } from '@config/firebaseRefs';
 import { documentId, getDocs, orderBy, query, where } from 'firebase/firestore';
 
 const useCaStore = create(
