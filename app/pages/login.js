@@ -133,7 +133,7 @@ const Login = () => {
         <View className="flex-row px-3 mb-4 justify-between items-center">
           <View>
             <H6 color={'text-quaternary'}>USER MANAGEMENT</H6>
-            <P5 color={'text-quaternary'}>Version : 1.0.0</P5>
+            <P5 color={'text-quaternary'}>Version : 1.0.1</P5>
           </View>
 
           <View>
